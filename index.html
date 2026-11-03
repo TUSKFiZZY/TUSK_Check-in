@@ -13,7 +13,7 @@
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#33224e 0%,var(--bg) 58%);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
 main{width:min(620px,100%);margin:auto;padding:24px 16px 40px}
 header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacing:.22em;color:var(--accent);font-weight:800}.date{font-size:clamp(22px,6vw,30px);font-weight:800;margin:10px 0 4px}.sub{font-size:12px;color:var(--muted)}
-.nav{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:15px}.month-toggle{margin-top:12px}.month-view{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:15px;margin:13px 0}.month-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.month-title{font-weight:800}.month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.month-weekday{text-align:center;color:var(--muted);font-size:10px;padding:5px 0}.month-day{min-width:0;min-height:72px;padding:6px 4px;border:1px solid var(--line);border-radius:9px;background:#171421;color:var(--text);text-align:left;cursor:pointer}.month-day.selected{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.month-day.today{background:#29213a}.month-day.empty{visibility:hidden}.month-num{font-size:12px;font-weight:800;margin-bottom:4px}.month-progress{font-size:9px;color:var(--muted);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.month-legend{font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5}.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:9px 14px;border-radius:11px;font:inherit;font-size:13px;cursor:pointer}.btn:disabled{opacity:.35;cursor:default}
+.nav{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:15px}.month-toggle{margin-top:12px}.month-view{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:15px;margin:13px 0}.month-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.month-title{font-weight:800}.month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.month-weekday{text-align:center;color:var(--muted);font-size:10px;padding:5px 0}.month-day{position:relative;min-width:0;min-height:72px;padding:6px 4px;border:1px solid var(--line);border-radius:9px;background:#171421;color:var(--text);text-align:left;cursor:pointer}.month-day.selected{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.month-day.today{box-shadow:inset 0 0 0 1px var(--accent)}.month-day.completed{background:#173326;border-color:#28734b}.month-day.incomplete{background:#3a2028;border-color:#8b3d4b}.month-day.future{background:#171421;color:#777184;opacity:.55;cursor:not-allowed}.month-day.empty{visibility:hidden}.month-num{font-size:12px;font-weight:800;margin-bottom:4px}.month-status{position:absolute;right:5px;top:4px;font-size:13px;font-weight:900;line-height:1}.month-day.completed .month-status{color:#69e39a}.month-day.incomplete .month-status{color:#ff8292}.month-progress{font-size:9px;color:var(--muted);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.month-day.future .month-progress{color:#777184}.month-legend{font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5}.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:9px 14px;border-radius:11px;font:inherit;font-size:13px;cursor:pointer}.btn:disabled{opacity:.35;cursor:default}
 .summary,.account{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:17px;margin:13px 0}
 .summarytop,.accounttop{display:flex;align-items:center;justify-content:space-between;gap:12px}.smallcap{font-size:10px;letter-spacing:.15em;color:var(--muted);font-weight:800}.total{font-size:27px;font-weight:850}.count{font-size:12px;color:var(--muted)}
 .bar{height:6px;border-radius:9px;background:#39334b;overflow:hidden;margin-top:13px}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),#d1aaff);border-radius:9px;transition:width .2s}
@@ -98,20 +98,23 @@ function renderMonth(){
  const first=new Date(year,month,1,12).getDay(),days=new Date(year,month+1,0).getDate();
  for(let i=0;i<first;i++){const blank=document.createElement('div');blank.className='month-day empty';grid.append(blank)}
  for(let day=1;day<=days;day++){
-  const date=new Date(year,month,day,12),dateKey=key(date),saved=records[dateKey]||{};
-  const cell=document.createElement('button');cell.type='button';cell.className='month-day'+(dateKey===key(selected)?' selected':'')+(dateKey===key(today())?' today':'');
+  const date=new Date(year,month,day,12),dateKey=key(date),saved=records[dateKey]||{},isFuture=dateKey>key(today());
+  const dayComplete=accounts.length>0&&accounts.every(account=>Array.isArray(saved[account.id])&&saved[account.id].length>=3&&saved[account.id].every(Boolean));
+  const cell=document.createElement('button');cell.type='button';cell.disabled=isFuture;
+  cell.className='month-day'+(dateKey===key(selected)?' selected':'')+(dateKey===key(today())?' today':'')+(isFuture?' future':dayComplete?' completed':' incomplete');
   const num=document.createElement('div');num.className='month-num';num.textContent=day;cell.append(num);
+  if(!isFuture){const status=document.createElement('span');status.className='month-status';status.textContent=dayComplete?'✓':'✕';status.setAttribute('aria-label',dayComplete?'Completed':'Incomplete');cell.append(status)}
   accounts.forEach(account=>{
    const values=Array.isArray(saved[account.id])?saved[account.id]:[false,false,false];
    const line=document.createElement('div');line.className='month-progress';
    const shortName=account.name.length>9?account.name.slice(0,8)+'…':account.name;
    line.textContent=shortName+' '+values.filter(Boolean).length+'/3';cell.append(line);
   });
-  cell.onclick=()=>{selected=date;showMonth=false;render()};
+  if(!isFuture)cell.onclick=()=>{selected=date;showMonth=false;render()};
   grid.append(cell);
  }
  panel.append(grid);
- const legend=document.createElement('div');legend.className='month-legend';legend.textContent='Each date shows completed tasks out of 3 for every account. Select a day to open its checklist.';panel.append(legend);
+ const legend=document.createElement('div');legend.className='month-legend';legend.textContent='Green ✓ = all tasks completed for every account. Red ✕ = incomplete. Future dates are locked until they begin.';panel.append(legend);
 }
 function render(){
  const k=key(selected),d=current(),todayKey=key(today());
