@@ -40,6 +40,7 @@ header{text-align:center;padding:10px 0 20px}body.genshin-active .date,body.gens
  <div class="brand">TUSKFiZZY</div>
  <img class="home-app-icon" src="https://b2287888.assetcdn.net/2.0/2287888/wp-content/uploads/2025/04/abstract-blue-purple-wallpaper.jpg?lossy=1&strip=1&webp=1" alt="TUSKFiZZY square icon">
  <div class="date" id="date">Loading date…</div>
+ <div class="sub" id="clock" aria-live="off">--:--:--</div>
  <div class="sub" id="daylabel">Daily checklist</div>
  <div class="nav">
   <button class="btn" id="prev" aria-label="Previous day">←</button>
@@ -85,76 +86,7 @@ function selectedGenshin(){return genshinAccounts.find(a=>a.id===selectedGenshin
 function showGenshinView(view){
  genshinView=view;
  document.getElementById('moreMenu').hidden=true;
- document.getElementById('moreMenuButton').setAttribute('aria-expanded','false');
- const panel=document.getElementById('genshinPanel'),body=document.getElementById('genshinPanelBody'),title=document.getElementById('genshinTitle');
- const home=view==='home';
- document.body.classList.toggle('genshin-active',!home);
- panel.hidden=home;
- if(home)return;
- body.replaceChildren();
- const account=selectedGenshin();
- const addText=(tag,cls,txt,parent=body)=>{const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=txt;parent.append(el);return el};
- const manageButton=()=>{const b=document.createElement('button');b.className='btn';b.type='button';b.textContent='Manage Genshin Account';b.onclick=()=>showGenshinView('accounts');body.append(b)};
- if(view==='accounts'){
-  title.textContent='Manage Genshin Accounts';
-  addText('p','','Manage your Genshin profiles here. These are separate from the daily checklist accounts.');
-  const add=document.createElement('button');add.className='btn primary';add.textContent='＋ Add Genshin account';add.onclick=()=>{const name=prompt('Enter a name for this Genshin account:');if(!name||!name.trim())return;const uid=prompt('Enter the Genshin UID (you can edit it later):')||'';const id='genshin_'+Date.now().toString(36);genshinAccounts.push({id,name:name.trim(),uid:uid.trim(),server:'os_asia'});selectedGenshinId=id;saveGenshinAccounts();showGenshinView('accounts')};body.append(add);
-  if(!genshinAccounts.length)addText('div','genshin-note','No Genshin accounts added yet. Add one to get started.');
-  genshinAccounts.forEach(a=>{
-   const row=addText('div','genshin-account-row','');const info=addText('div','','',row);addText('strong','',a.name,info);addText('small','',(a.uid?'UID '+a.uid+' · ':'')+(a.server||'Asia'),info);
-   const controls=addText('div','genshin-actions','',row);
-   const choose=document.createElement('button');choose.className='btn';choose.textContent=a.id===selectedGenshinId?'Selected':'Switch';choose.onclick=()=>{selectedGenshinId=a.id;saveGenshinAccounts();showGenshinView('accounts')};controls.append(choose);
-   const edit=document.createElement('button');edit.className='btn';edit.textContent='Edit';edit.onclick=()=>{const name=prompt('Account name:',a.name);if(name&&name.trim())a.name=name.trim();const uid=prompt('Genshin UID:',a.uid||'');if(uid!==null)a.uid=uid.trim();const server=prompt('Server: os_asia, os_usa, os_euro, or os_cht',a.server||'os_asia');if(server)a.server=server;saveGenshinAccounts();showGenshinView('accounts')};controls.append(edit);
-   const remove=document.createElement('button');remove.className='btn danger';remove.textContent='Remove';remove.onclick=()=>{if(confirm('Remove '+a.name+' from Genshin accounts?')){genshinAccounts=genshinAccounts.filter(x=>x.id!==a.id);if(selectedGenshinId===a.id)selectedGenshinId=genshinAccounts[0]?.id||'';saveGenshinAccounts();showGenshinView('accounts')}};controls.append(remove);
-  });
-  return;
- }
- if(!account){
-  title.textContent=view==='achievements'?'Achievements':view==='wishes'?'Wish History':view==='pity'?'Pity':'Genshin Profile';
-  addText('div','genshin-note','Add a Genshin account first to view this section.');
-  const go=document.createElement('button');go.className='btn';go.textContent='Manage Genshin Account';go.onclick=()=>showGenshinView('accounts');body.append(go);return;
- }
- if(view==='profile'){
-  title.textContent='Genshin Profile';
-  addText('p','','Selected Genshin account: '+account.name);
-  addText('div','genshin-note','UID: '+(account.uid||'Not added')+'\nServer: '+(account.server||'Asia')+'\n\nLive profile details (Adventure Rank, characters, exploration and Spiral Abyss) are not connected yet.');
- }else if(view==='achievements'){
-  title.textContent='Achievements';
-  addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nAchievement totals and unlocked/locked lists are not connected yet. No achievement data is being fabricated.');
- }else if(view==='wishes'){
-  title.textContent='Wish History';
-  addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nWish history is not connected yet. UIGF import support can be added separately.');
- }else if(view==='pity'){
-  title.textContent='Pity';
-  addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nPity counts and guaranteed status will appear here after wish-history data is connected or imported.');
- }
- const actions=document.createElement('div');actions.className='genshin-actions';
- const switcher=document.createElement('button');switcher.className='btn';switcher.textContent='Switch Genshin Account';switcher.onclick=()=>showGenshinView('accounts');actions.append(switcher);body.append(actions);
- manageButton();
-}
-document.getElementById('moreMenuButton').setAttribute('aria-expanded','false');
- const panel=document.getElementById('genshinPanel'),body=document.getElementById('genshinPanelBody'),title=document.getElementById('genshinTitle');panel.hidden=false;body.replaceChildren();
- const account=selectedGenshin();
- const addText=(tag,cls,txt,parent=body)=>{const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=txt;parent.append(el);return el};
- if(view==='accounts'){
-  title.textContent='Manage Genshin Accounts';
-  addText('p','','These profiles are global and separate from your daily checklist accounts.');
-  const add=document.createElement('button');add.className='btn primary';add.textContent='＋ Add Genshin account';add.onclick=()=>{const name=prompt('Enter a name for this Genshin account:');if(!name||!name.trim())return;const uid=prompt('Enter the Genshin UID (you can edit it later):')||'';const id='genshin_'+Date.now().toString(36);genshinAccounts.push({id,name:name.trim(),uid:uid.trim(),server:'os_asia'});selectedGenshinId=id;saveGenshinAccounts();showGenshinView('accounts')};body.append(add);
-  if(!genshinAccounts.length)addText('div','genshin-note','No Genshin accounts added yet. Add one to get started.');
-  genshinAccounts.forEach(a=>{const row=addText('div','genshin-account-row','');const info=addText('div','','',row);addText('strong','',a.name,info);addText('small','',(a.uid?'UID '+a.uid+' · ':'')+(a.server||'Asia'),info);const controls=addText('div','genshin-actions','',row);const choose=document.createElement('button');choose.className='btn';choose.textContent=a.id===selectedGenshinId?'Selected':'Switch';choose.onclick=()=>{selectedGenshinId=a.id;saveGenshinAccounts();showGenshinView('accounts')};controls.append(choose);const edit=document.createElement('button');edit.className='btn';edit.textContent='Edit';edit.onclick=()=>{const name=prompt('Account name:',a.name);if(name&&name.trim())a.name=name.trim();const uid=prompt('Genshin UID:',a.uid||'');if(uid!==null)a.uid=uid.trim();const server=prompt('Server: Asia, America, Europe, or TW/HK/MO',a.server||'os_asia');if(server)a.server=server;saveGenshinAccounts();showGenshinView('accounts')};controls.append(edit);const remove=document.createElement('button');remove.className='btn danger';remove.textContent='Remove';remove.onclick=()=>{if(confirm('Remove '+a.name+' from Genshin accounts?')){genshinAccounts=genshinAccounts.filter(x=>x.id!==a.id);if(selectedGenshinId===a.id)selectedGenshinId=genshinAccounts[0]?.id||'';saveGenshinAccounts();showGenshinView('accounts')}};controls.append(remove)});
-  return;
- }
- if(!account){title.textContent=view==='achievements'?'Achievements':view==='wishes'?'Wish History & Pity':'Genshin Profile';addText('div','genshin-note','Add a Genshin account first using ⋮ → Manage Genshin Accounts.');const manage=document.createElement('button');manage.className='btn';manage.textContent='Manage Genshin Accounts';manage.onclick=()=>showGenshinView('accounts');body.append(manage);return}
- if(view==='profile'){
-  title.textContent='Genshin Profile';addText('p','','Selected Genshin account details.');addText('div','genshin-note','Account: '+account.name+'\nUID: '+(account.uid||'Not added')+'\nServer: '+(account.server||'Asia')+'\n\nLive profile details (Adventure Rank, characters, exploration and Spiral Abyss) are not connected yet.');
- }else if(view==='achievements'){
-  title.textContent='Achievements';addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nAchievement totals and unlocked/locked lists are not connected yet. No achievement data is being fabricated.');
- }else if(view==='wishes'){
-  title.textContent='Wish History & Pity';addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nWish history and pity are not connected yet. Import support for UIGF wish-history files can be added separately.');
- }
- const switcher=document.createElement('div');switcher.className='genshin-actions';const change=document.createElement('button');change.className='btn';change.textContent='Switch Genshin account';change.onclick=()=>showGenshinView('accounts');switcher.append(change);body.append(switcher);
-}
-document.getElementById('moreMenuButton').addEventListener('click',()=>{const menu=document.getElementById('moreMenu');menu.hidden=!menu.hidden;document.getElementById('moreMenuButton').setAttribute('aria-expanded',String(!menu.hidden))});
+ document.getElementById('moreMenuButton').addEventListener('click',()=>{const menu=document.getElementById('moreMenu');menu.hidden=!menu.hidden;document.getElementById('moreMenuButton').setAttribute('aria-expanded',String(!menu.hidden))});
 document.querySelectorAll('[data-gview]').forEach(button=>button.addEventListener('click',()=>showGenshinView(button.dataset.gview)));
 document.getElementById('closeGenshinPanel').onclick=()=>document.getElementById('genshinPanel').hidden=true;
 document.getElementById('addGenshinHome').onclick=()=>showGenshinView('accounts');
@@ -167,6 +99,7 @@ let showMonth=false;
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const today=()=>{let d=new Date();d.setHours(12,0,0,0);return d};
+function updateClock(){const el=document.getElementById('clock');if(el)el.textContent=new Date().toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 let accounts=[],records={};
 try{accounts=JSON.parse(localStorage.getItem(accountsKey)||'null')||[]}catch(e){}
 try{records=JSON.parse(localStorage.getItem(recordsKey)||'{}')||{}}catch(e){}
@@ -221,6 +154,7 @@ function render(){
  const k=key(selected),d=current(),todayKey=key(today());
  renderMonth();
  document.getElementById('date').textContent=selected.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+ updateClock();
  document.getElementById('daylabel').textContent=k===todayKey?"Today's checklist":k<todayKey?'Previous day':'Future date';
  document.getElementById('next').disabled=k>=todayKey;
  const host=document.getElementById('accounts');host.replaceChildren();
@@ -321,6 +255,7 @@ document.getElementById('today').onclick=()=>{selected=today();monthCursor=new D
 document.getElementById('monthToggle').onclick=()=>{showMonth=!showMonth;monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);render()};
 document.getElementById('reset').onclick=()=>{if(confirm('Reset all account checkboxes for '+key(selected)+'?')){delete records[key(selected)];saveAll();render()}};
 render();
+setInterval(updateClock,1000);
 setInterval(()=>{if(key(selected)===key(today()))render()},30000);
 let installEvent;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e;document.getElementById('install').style.display='block'});
