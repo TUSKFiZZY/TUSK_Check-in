@@ -3,7 +3,7 @@ const path = require("path");
 const crypto = require("crypto");
 
 const APP_URL = "https://tuskfizzy.github.io/TUSK_Check-in/";
-const CHECKIN_URL = "https://act.hoyolab.com/ys/event/signin-sea-v3/index.html";
+const CHECKIN_URL = "https://act.hoyolab.com/ys/event/signin-sea-v3/index.html?act_id=e202102251931481&lang=en-us";
 const DAILY_NOTE_URL = "https://bbs-api-os.hoyolab.com/game_record/genshin/api/dailyNote";
 
 function isTracker(event) {
