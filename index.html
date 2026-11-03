@@ -34,13 +34,15 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
   <button class="btn" id="today">Today</button>
   <button class="btn" id="next" aria-label="Next day">→</button>
  </div>
+ <button class="btn month-toggle" id="monthToggle">Month overview</button>
 </header>
 <button class="btn install" id="install">Install app</button>
 <section class="summary">
  <div class="summarytop"><div><div class="smallcap">OVERALL PROGRESS</div><div class="count" id="overallcount">0 of 6 completed</div></div><div class="total" id="percent">0%</div></div>
  <div class="bar"><div class="fill" id="overallbar"></div></div>
 </section>
-<section class="month-view" id="monthView" hidden></section>\n<div id="accounts"></div>
+<section class="month-view" id="monthView" hidden></section>
+<div id="accounts"></div>
 <button class="btn add-account" id="addAccount">＋ Add another account</button>
 <div class="footer"><span id="saved">Saved on this device</span><button class="btn danger" id="reset">Reset this day ↺</button></div>
 </main>
@@ -48,7 +50,9 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
 (()=>{
 const tasks=['Login','Commission','Resin'];
 const accountsKey='tuskfizzy_accounts_v1',recordsKey='tuskfizzy_daily_multi_v1',legacyKey='tuskfizzy_daily_v1';
-let selected=new Date();selected.setHours(12,0,0,0);\nlet monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);\nlet showMonth=false;
+let selected=new Date();selected.setHours(12,0,0,0);
+let monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);
+let showMonth=false;
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const today=()=>{let d=new Date();d.setHours(12,0,0,0);return d};
@@ -73,8 +77,45 @@ function current(){let r=records[key(selected)];if(!r){r=fresh();}accounts.forEa
 function makePortrait(src,name){
  const img=document.createElement('img');img.className='portrait';img.alt=name+' portrait';img.src=src||'';img.onerror=()=>{const fallback=document.createElement('div');fallback.className='portrait portrait-fallback';fallback.textContent=(name.trim()[0]||'?').toUpperCase();img.replaceWith(fallback)};return img;
 }
+function renderMonth(){
+ const panel=document.getElementById('monthView');
+ panel.replaceChildren();
+ panel.hidden=!showMonth;
+ document.getElementById('accounts').hidden=showMonth;
+ document.getElementById('addAccount').hidden=showMonth;
+ document.querySelector('.summary').hidden=showMonth;
+ document.querySelector('.footer').hidden=showMonth;
+ document.getElementById('monthToggle').textContent=showMonth?'Day view':'Month overview';
+ if(!showMonth)return;
+ const head=document.createElement('div');head.className='month-head';
+ const prev=document.createElement('button');prev.className='btn';prev.textContent='←';prev.onclick=()=>{monthCursor.setMonth(monthCursor.getMonth()-1);render()};
+ const title=document.createElement('div');title.className='month-title';title.textContent=monthCursor.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+ const next=document.createElement('button');next.className='btn';next.textContent='→';next.onclick=()=>{monthCursor.setMonth(monthCursor.getMonth()+1);render()};
+ head.append(prev,title,next);panel.append(head);
+ const grid=document.createElement('div');grid.className='month-grid';
+ ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(day=>{const el=document.createElement('div');el.className='month-weekday';el.textContent=day;grid.append(el)});
+ const year=monthCursor.getFullYear(),month=monthCursor.getMonth();
+ const first=new Date(year,month,1,12).getDay(),days=new Date(year,month+1,0).getDate();
+ for(let i=0;i<first;i++){const blank=document.createElement('div');blank.className='month-day empty';grid.append(blank)}
+ for(let day=1;day<=days;day++){
+  const date=new Date(year,month,day,12),dateKey=key(date),saved=records[dateKey]||{};
+  const cell=document.createElement('button');cell.type='button';cell.className='month-day'+(dateKey===key(selected)?' selected':'')+(dateKey===key(today())?' today':'');
+  const num=document.createElement('div');num.className='month-num';num.textContent=day;cell.append(num);
+  accounts.forEach(account=>{
+   const values=Array.isArray(saved[account.id])?saved[account.id]:[false,false,false];
+   const line=document.createElement('div');line.className='month-progress';
+   const shortName=account.name.length>9?account.name.slice(0,8)+'…':account.name;
+   line.textContent=shortName+' '+values.filter(Boolean).length+'/3';cell.append(line);
+  });
+  cell.onclick=()=>{selected=date;showMonth=false;render()};
+  grid.append(cell);
+ }
+ panel.append(grid);
+ const legend=document.createElement('div');legend.className='month-legend';legend.textContent='Each date shows completed tasks out of 3 for every account. Select a day to open its checklist.';panel.append(legend);
+}
 function render(){
  const k=key(selected),d=current(),todayKey=key(today());
+ renderMonth();
  document.getElementById('date').textContent=selected.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
  document.getElementById('daylabel').textContent=k===todayKey?"Today's checklist":k<todayKey?'Previous day':'Future date';
  document.getElementById('next').disabled=k>=todayKey;
@@ -156,7 +197,8 @@ document.getElementById('addAccount').onclick=()=>{
 };
 document.getElementById('prev').onclick=()=>{selected.setDate(selected.getDate()-1);render()};
 document.getElementById('next').onclick=()=>{if(key(selected)<key(today())){selected.setDate(selected.getDate()+1);render()}};
-document.getElementById('today').onclick=()=>{selected=today();monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);showMonth=false;render()};\ndocument.getElementById('monthToggle').onclick=()=>{showMonth=!showMonth;monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);render()};
+document.getElementById('today').onclick=()=>{selected=today();monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);showMonth=false;render()};
+document.getElementById('monthToggle').onclick=()=>{showMonth=!showMonth;monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);render()};
 document.getElementById('reset').onclick=()=>{if(confirm('Reset all account checkboxes for '+key(selected)+'?')){delete records[key(selected)];saveAll();render()}};
 render();
 setInterval(()=>{if(key(selected)===key(today()))render()},30000);
