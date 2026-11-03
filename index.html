@@ -41,6 +41,15 @@ header{text-align:center;padding:10px 0 20px}body.genshin-active .date,body.gens
  .genshin-account-row .genshin-actions .btn{width:100%}
 }
 
+
+.gprofile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+.gprofile-stat{min-width:0;padding:11px;border:1px solid var(--line);border-radius:11px;background:#171421}
+.gprofile-stat strong{display:block;font-size:19px;overflow-wrap:anywhere}.gprofile-stat span{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.gprofile-section{margin-top:16px;padding-top:13px;border-top:1px solid var(--line)}.gprofile-section h3{font-size:14px;margin:0 0 8px}
+.gprofile-character-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.gprofile-character{min-width:0;padding:9px 6px;text-align:center;background:#171421;border:1px solid var(--line);border-radius:10px}
+.gprofile-character strong{display:block;font-size:12px;overflow-wrap:anywhere}.gprofile-character span,.gprofile-muted{display:block;color:var(--muted);font-size:10px;margin-top:4px;line-height:1.5}
+@media(max-width:390px){.gprofile-character-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -102,23 +111,21 @@ try{genshinAccounts=JSON.parse(localStorage.getItem(genshinAccountsKey)||'[]')||
 function saveGenshinAccounts(){localStorage.setItem(genshinAccountsKey,JSON.stringify(genshinAccounts));if(selectedGenshinId)localStorage.setItem(genshinSelectedKey,selectedGenshinId);else localStorage.removeItem(genshinSelectedKey);if(typeof render==='function')render()}
 function selectedGenshin(){return genshinAccounts.find(a=>a.id===selectedGenshinId)||null}
 async function refreshGenshinAccount(accountItem,statusEl){
-  if(!accountItem.uid){statusEl.textContent='Add this account UID first.';return}
-  if(!window.tuskfizzy||typeof window.tuskfizzy.getDailyNote!=='function'){
-   statusEl.textContent='Genshin connection is available in the TUSKFiZZY Windows desktop app. Open the app to connect.';
-   return;
-  }
-  statusEl.textContent='Checking HoYoLAB connection…';
-  try{
-   const data=await window.tuskfizzy.getDailyNote(accountItem.id,accountItem.uid,accountItem.server||'os_asia');
-   accountItem.dailyNote=data;
-   accountItem.lastConnected=Date.now();
-   saveGenshinAccounts();
-   statusEl.textContent='Connected · live data refreshed';
-   showGenshinView(genshinView);
-  }catch(error){
-   statusEl.textContent=error&&error.message?error.message:'Could not connect. Sign in to HoYoLAB and try again.';
-  }
+ if(!accountItem.uid){statusEl.textContent="Add this account UID first.";return}
+ if(!window.tuskfizzy||typeof window.tuskfizzy.getEnkaProfile!=="function"||typeof window.tuskfizzy.getBattleChronicle!=="function"||typeof window.tuskfizzy.getDailyNote!=="function"){
+  statusEl.textContent="Both profile connections are available in the TUSKFiZZY Windows desktop app. Open it to refresh.";
+  return;
  }
+ const errors=[];
+ statusEl.textContent="Refreshing public Enka profile…";
+ try{const d=await window.tuskfizzy.getEnkaProfile(accountItem.uid);accountItem.enkaProfile=d;accountItem.enkaUpdated=Date.now()}catch(e){errors.push("Enka: "+(e.message||"unavailable"))}
+ statusEl.textContent="Refreshing HoYoLAB Battle Chronicle…";
+ try{const d=await window.tuskfizzy.getBattleChronicle(accountItem.id,accountItem.uid,accountItem.server||"os_asia");accountItem.battleChronicle=d;accountItem.chronicleUpdated=Date.now()}catch(e){errors.push("HoYoLAB: "+(e.message||"unavailable"))}
+ try{const d=await window.tuskfizzy.getDailyNote(accountItem.id,accountItem.uid,accountItem.server||"os_asia");accountItem.dailyNote=d;accountItem.lastConnected=Date.now()}catch(e){errors.push("Daily Note: "+(e.message||"unavailable"))}
+ saveGenshinAccounts();
+ statusEl.textContent=errors.length?"Some sources could not refresh:\n"+errors.join("\n"):"Both Enka and HoYoLAB data refreshed successfully.";
+ showGenshinView(genshinView);
+}
  async function openGenshinLogin(accountItem,statusEl){
   if(!window.tuskfizzy||typeof window.tuskfizzy.connectHoYoLab!=='function'){
    statusEl.textContent='Open the TUSKFiZZY Windows desktop app to connect this account.';
@@ -204,15 +211,31 @@ async function refreshGenshinAccount(accountItem,statusEl){
   if(!account){addText('div','genshin-note','Add a Genshin account first to view this section.');manageButton();return}
   if(view==='profile'){
    addText('p','','Selected Genshin account: '+account.name);
-   addText('div','genshin-note','UID: '+(account.uid||'Not added')+'\nServer: '+(account.server||'Asia')+'\n\n'+(account.dailyNote?'Live HoYoLAB data · updated '+new Date(account.dailyNote.fetchedAt).toLocaleString():'Not connected yet. Open HoYoLAB and sign in to connect.'));
-   if(account.dailyNote){
-    const stats=addText('div','hoyo-data','');
-    [[account.dailyNote.resin+'/'+account.dailyNote.maxResin,'Resin'],[account.dailyNote.commissions+'/'+account.dailyNote.totalCommissions,'Commissions'],[account.dailyNote.expeditions+'/'+account.dailyNote.maxExpeditions,'Expeditions'],[account.dailyNote.extraRewardClaimed?'Claimed':'Not claimed','Commission bonus']].forEach(([value,label])=>{const item=addText('div','hoyo-stat','',stats);addText('strong','',value,item);addText('span','',label,item)});
-   }
-   const status=addText('div','genshin-note','');
-   const actions=addText('div','genshin-actions','');
+   addText('div','genshin-note','UID: '+(account.uid||'Not added')+'\nServer: '+(account.server||'Asia'));
+   const status=addText('div','genshin-note',''),actions=addText('div','genshin-actions','');
    const connect=document.createElement('button');connect.className='btn';connect.textContent='Connect HoYoLAB';connect.onclick=()=>openGenshinLogin(account,status);actions.append(connect);
-   const refresh=document.createElement('button');refresh.className='btn primary';refresh.textContent='Refresh Genshin data';refresh.disabled=!account.uid;refresh.onclick=()=>refreshGenshinAccount(account,status);actions.append(refresh);
+   const refresh=document.createElement('button');refresh.className='btn primary';refresh.textContent='Refresh both sources';refresh.disabled=!account.uid;refresh.onclick=()=>refreshGenshinAccount(account,status);actions.append(refresh);
+   const enka=account.enkaProfile&&account.enkaProfile.playerInfo,chronicle=account.battleChronicle;
+   const pub=addText('div','gprofile-section','');addText('h3','','Public Genshin Profile · Enka.Network',pub);
+   if(enka){
+    addText('div','gprofile-muted','Updated '+new Date(account.enkaProfile.fetchedAt||account.enkaUpdated||Date.now()).toLocaleString()+(account.enkaProfile.cached?' · cached':''),pub);
+    const stats=addText('div','gprofile-grid','',pub),pi=enka;
+    [[pi.nickname||'—','Nickname'],[pi.worldLevel??'—','World Level'],[pi.finishAchievementNum??'—','Achievements'],[pi.towerFloorIndex?'Floor '+pi.towerFloorIndex+' · Chamber '+(pi.towerLevelIndex||'—'):'—','Spiral Abyss'],[(pi.showAvatarInfoList||[]).length,'Showcased characters']].forEach(([v,l])=>{const x=addText('div','gprofile-stat','',stats);addText('strong','',String(v),x);addText('span','',l,x)});
+    if(pi.signature)addText('p','gprofile-muted','“'+pi.signature+'”',pub);
+    const chars=Array.isArray(account.enkaProfile.avatarInfoList)?account.enkaProfile.avatarInfoList:[];
+    addText('h3','','Character Showcase ('+chars.length+')',pub);
+    if(chars.length){const grid=addText('div','gprofile-character-grid','',pub);chars.forEach(ch=>{const card=addText('div','gprofile-character','',grid),id=ch.avatarId||ch.avatarID||'Unknown',lv=ch.propMap&&ch.propMap['4001']?ch.propMap['4001'].val:null,con=Array.isArray(ch.talentIdList)?ch.talentIdList.length:0;addText('strong','','Character #'+id,card);addText('span','',(lv?'Lv. '+lv+' · ':'')+'C'+con,card)})}
+    else addText('p','gprofile-muted','No public character showcase. Enable “Show Character Details” in-game and add characters to your showcase.',pub);
+   }else addText('p','gprofile-muted','Refresh to load public player information and showcased characters from Enka.Network.',pub);
+   const hoyo=addText('div','gprofile-section','');addText('h3','','HoYoLAB Battle Chronicle',hoyo);
+   if(chronicle){
+    addText('div','gprofile-muted','Authenticated session · '+new Date(chronicle.fetchedAt||account.chronicleUpdated||Date.now()).toLocaleString(),hoyo);
+    const s=chronicle.stats||{},grid=addText('div','gprofile-grid','',hoyo);
+    [['active_days','Active days'],['achievements','Achievements'],['avatars','Characters'],['way_points','Waypoints'],['domains','Domains'],['spiral_abyss','Spiral Abyss']].forEach(([k,l])=>{if(s[k]!==undefined){const x=addText('div','gprofile-stat','',grid);addText('strong','',String(s[k]),x);addText('span','',l,x)}});
+    const worlds=Array.isArray(chronicle.world_explorations)?chronicle.world_explorations:[];
+    if(worlds.length){addText('h3','','World Exploration',hoyo);worlds.slice(0,8).forEach(w=>addText('div','gprofile-muted',(w.name||w.id||'Region')+' · '+(w.exploration_percentage!==undefined?(w.exploration_percentage/10).toFixed(1)+'%':'Progress available'),hoyo))}
+   }else addText('p','gprofile-muted','Sign in using Connect HoYoLAB, then refresh. Battle Chronicle visibility may need to be public.',hoyo);
+   if(account.dailyNote){const daily=addText('div','gprofile-section','');addText('h3','','Live Daily Note',daily);const grid=addText('div','gprofile-grid','',daily);[[account.dailyNote.resin+'/'+account.dailyNote.maxResin,'Original Resin'],[account.dailyNote.commissions+'/'+account.dailyNote.totalCommissions,'Daily Commissions'],[account.dailyNote.expeditions+'/'+account.dailyNote.maxExpeditions,'Expeditions'],[account.dailyNote.extraRewardClaimed?'Claimed':'Not claimed','Commission bonus']].forEach(([v,l])=>{const x=addText('div','gprofile-stat','',grid);addText('strong','',String(v),x);addText('span','',l,x)})}
   }else if(view==='achievements'){
    addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nAchievement data is not connected yet.');
   }else if(view==='wishes'){
