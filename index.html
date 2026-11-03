@@ -149,7 +149,8 @@ async function refreshGenshinAccount(accountItem,statusEl){
    statusEl.textContent='HoYoLAB opened in a separate window. Sign in there, then return and press Refresh.';
   }catch(error){statusEl.textContent=error&&error.message?error.message:'Could not open HoYoLAB.'}
  }
- async function refreshPublicAchievementCount(accountItem,statusEl,force=false){
+ const achievementRefreshes=new Map();
+ async function refreshPublicAchievementCountOnce(accountItem,statusEl,force=false){
   if(!accountItem.uid){statusEl.textContent='Add this account UID to retrieve its public achievement count.';return}
   const ttl=Math.max(60,Number(accountItem.enkaProfile&&accountItem.enkaProfile.ttl)||300)*1000;
   const age=Date.now()-Number(accountItem.enkaProfile&&accountItem.enkaProfile.fetchedAt||0);
@@ -191,6 +192,13 @@ async function refreshGenshinAccount(accountItem,statusEl){
   }catch(error){
    statusEl.textContent='Could not refresh the public count: '+(error&&error.message?error.message:'unknown error')+'. Your last saved count is kept.';
   }
+ }
+ function refreshPublicAchievementCount(accountItem,statusEl,force=false){
+  const key=String(accountItem.uid||'');
+  if(achievementRefreshes.has(key))return achievementRefreshes.get(key);
+  const task=refreshPublicAchievementCountOnce(accountItem,statusEl,force).finally(()=>achievementRefreshes.delete(key));
+  achievementRefreshes.set(key,task);
+  return task;
  }
  function getWishPools(){return {'100':'Beginner','200':'Standard','301':'Character Event','302':'Weapon Event','500':'Chronicled Wish'}}
  function extractUIGFAccount(data,expectedUid){
@@ -348,7 +356,7 @@ async function refreshGenshinAccount(accountItem,statusEl){
    addText('p','','Selected account: '+account.name);
    addText('div','genshin-note','This page uses public profile data only. It does not ask for or store HoYoLAB cookies.');
    const status=addText('div','genshin-note',account.uid?'Checking public achievement count…':'Add a Genshin UID to enable automatic count updates.');
-   const refresh=document.createElement('button');refresh.className='btn primary';refresh.type='button';refresh.textContent='Refresh achievement count';refresh.disabled=!account.uid;refresh.onclick=async()=>{await refreshPublicAchievementCount(account,status,true);showGenshinView('achievements')};
+   const refresh=document.createElement('button');refresh.className='btn primary';refresh.type='button';refresh.textContent='Refresh achievement count';refresh.disabled=!account.uid;refresh.onclick=async()=>{if(refresh.disabled)return;refresh.disabled=true;refresh.textContent='Refreshing…';try{await refreshPublicAchievementCount(account,status,true);showGenshinView('achievements')}finally{refresh.disabled=false;refresh.textContent='Refresh achievement count'}};
    const actions=addText('div','genshin-actions','');actions.append(refresh);
    const section=addText('div','gprofile-section','');addText('h3','','Achievement progress',section);
    if(count!==null){
