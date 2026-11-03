@@ -99,7 +99,7 @@ header{text-align:center;padding:10px 0 20px}body.genshin-active .date,body.gens
 const genshinAccountsKey='tuskfizzy_genshin_accounts_v1',genshinSelectedKey='tuskfizzy_selected_genshin_v1';
 let genshinAccounts=[],selectedGenshinId=localStorage.getItem(genshinSelectedKey)||'',genshinView='profile';
 try{genshinAccounts=JSON.parse(localStorage.getItem(genshinAccountsKey)||'[]')||[]}catch(e){}
-function saveGenshinAccounts(){localStorage.setItem(genshinAccountsKey,JSON.stringify(genshinAccounts));if(selectedGenshinId)localStorage.setItem(genshinSelectedKey,selectedGenshinId);else localStorage.removeItem(genshinSelectedKey)}
+function saveGenshinAccounts(){localStorage.setItem(genshinAccountsKey,JSON.stringify(genshinAccounts));if(selectedGenshinId)localStorage.setItem(genshinSelectedKey,selectedGenshinId);else localStorage.removeItem(genshinSelectedKey);if(typeof render==='function')render()}
 function selectedGenshin(){return genshinAccounts.find(a=>a.id===selectedGenshinId)||null}
 async function refreshGenshinAccount(accountItem,statusEl){
   if(!accountItem.uid){statusEl.textContent='Add this account UID first.';return}
@@ -247,8 +247,9 @@ Object.values(records).forEach(day=>{if(day&&typeof day==='object')oldDefaultIds
 if(hadOldDefaults){try{localStorage.setItem(accountsKey,JSON.stringify(accounts));localStorage.setItem(recordsKey,JSON.stringify(records));localStorage.removeItem(legacyKey)}catch(e){}}
 
 function saveAll(){try{localStorage.setItem(accountsKey,JSON.stringify(accounts));localStorage.setItem(recordsKey,JSON.stringify(records));document.getElementById('saved').textContent='✓ Saved on this device'}catch(e){document.getElementById('saved').textContent='Could not save — storage unavailable'}}
-const fresh=()=>Object.fromEntries(accounts.map(a=>[a.id,[false,false,false]]));
-function current(){let r=records[key(selected)];if(!r){r=fresh();}accounts.forEach(a=>{if(!Array.isArray(r[a.id]))r[a.id]=[false,false,false]});return r}
+function homeAccounts(){const combined=accounts.slice();genshinAccounts.forEach(g=>{if(!combined.some(a=>a.id===g.id))combined.push({id:g.id,name:g.name,portrait:'',uid:g.uid||'',server:g.server||'os_asia',isGenshin:true})});return combined}
+const fresh=()=>Object.fromEntries(homeAccounts().map(a=>[a.id,[false,false,false]]));
+function current(){let r=records[key(selected)];if(!r){r=fresh();}homeAccounts().forEach(a=>{if(!Array.isArray(r[a.id]))r[a.id]=[false,false,false]});return r}
 function makePortrait(src,name){
  const img=document.createElement('img');img.className='portrait';img.alt=name+' portrait';img.src=src||'';img.onerror=()=>{const fallback=document.createElement('div');fallback.className='portrait portrait-fallback';fallback.textContent=(name.trim()[0]||'?').toUpperCase();img.replaceWith(fallback)};return img;
 }
@@ -273,7 +274,7 @@ function renderMonth(){
  for(let i=0;i<first;i++){const blank=document.createElement('div');blank.className='month-day empty';grid.append(blank)}
  for(let day=1;day<=days;day++){
   const date=new Date(year,month,day,12),dateKey=key(date),saved=records[dateKey]||{},isFuture=dateKey>key(today());
-  const dayComplete=accounts.length>0&&accounts.every(account=>Array.isArray(saved[account.id])&&saved[account.id].length>=3&&saved[account.id].every(Boolean));
+  const visibleAccounts=homeAccounts();const dayComplete=visibleAccounts.length>0&&visibleAccounts.every(account=>Array.isArray(saved[account.id])&&saved[account.id].length>=3&&saved[account.id].every(Boolean));
   const cell=document.createElement('button');cell.type='button';cell.disabled=isFuture;
   cell.className='month-day'+(dateKey===key(selected)?' selected':'')+(dateKey===key(today())?' today':'')+(isFuture?' future':dayComplete?' completed':' incomplete');
   const num=document.createElement('div');num.className='month-num';num.textContent=day;cell.append(num);
@@ -293,9 +294,9 @@ function render(){
  document.getElementById('daylabel').textContent=k===todayKey?"Today's checklist":k<todayKey?'Previous day':'Future date';
  document.getElementById('next').disabled=k>=todayKey;
  const host=document.getElementById('accounts');host.replaceChildren();
- let completed=0,total=accounts.length*tasks.length;
- if(!accounts.length){const empty=document.createElement('div');empty.className='empty-accounts';empty.textContent='No daily tracker accounts added yet.';host.append(empty)}
- accounts.forEach((account,index)=>{
+ const visibleAccounts=homeAccounts();let completed=0,total=visibleAccounts.length*tasks.length;
+ if(!visibleAccounts.length){const empty=document.createElement('div');empty.className='empty-accounts';empty.textContent='No Genshin accounts added yet. Use Add Genshin Account to get started.';host.append(empty)}
+ visibleAccounts.forEach((account,index)=>{
   const section=document.createElement('section');section.className='account';
   const top=document.createElement('div');top.className='accounttop';
   const identity=document.createElement('div');identity.className='identity';
