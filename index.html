@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#171322">
-<meta name="description" content="Daily checklist for Main and Alternate TUSKFiZZY accounts.">
+<meta name="description" content="Daily checklist for TUSKFiZZY accounts.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <title>TUSKFiZZY Daily Tracker</title>
@@ -19,6 +19,7 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
 .bar{height:6px;border-radius:9px;background:#39334b;overflow:hidden;margin-top:13px}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),#d1aaff);border-radius:9px;transition:width .2s}
 .account h2{font-size:18px;margin:4px 0 0}.tasks{display:grid;gap:9px;margin-top:16px}.task{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid var(--line);border-radius:12px;background:#171421;cursor:pointer;user-select:none}.task input{width:20px;height:20px;accent-color:var(--accent);margin:0}.task span{font-weight:650}.task.done span{text-decoration:line-through;color:var(--muted)}
 .footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:17px 2px;color:var(--muted);font-size:11px}.danger{color:#ffb4c0}.install{display:none;width:100%;margin:0 0 12px;background:var(--accent2);border:0;font-weight:750}
+.accounttop{align-items:center}.identity{display:flex;align-items:center;gap:12px;min-width:0}.portrait{width:66px;height:66px;flex:0 0 66px;border-radius:15px;object-fit:cover;background:linear-gradient(145deg,#574078,#241d34);border:1px solid var(--line)}.portrait-fallback{display:grid;place-items:center;font-size:23px;font-weight:850;color:#e7d7ff}.accountmeta{min-width:0}.accountmeta h2{overflow-wrap:anywhere}.account-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px}.account-actions .btn{padding:6px 9px;font-size:11px}.add-account{width:100%;margin:5px 0 12px;border-style:dashed;color:var(--accent);font-weight:750;padding:13px}.empty-note{color:var(--muted);font-size:12px;margin:12px 2px 0}
 @media(min-width:560px){main{padding-top:34px}.summary,.account{padding:20px}}
 </style>
 </head>
@@ -39,51 +40,98 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
  <div class="summarytop"><div><div class="smallcap">OVERALL PROGRESS</div><div class="count" id="overallcount">0 of 6 completed</div></div><div class="total" id="percent">0%</div></div>
  <div class="bar"><div class="fill" id="overallbar"></div></div>
 </section>
-<section class="account">
- <div class="accounttop"><div><div class="smallcap">ACCOUNT 01</div><h2>Main TUSKFiZZY</h2></div><div class="count" id="maincount">0/3</div></div>
- <div class="tasks" id="main"></div><div class="bar"><div class="fill" id="mainbar"></div></div>
-</section>
-<section class="account">
- <div class="accounttop"><div><div class="smallcap">ACCOUNT 02</div><h2>Alternate TUSKFiZZY</h2></div><div class="count" id="altcount">0/3</div></div>
- <div class="tasks" id="alt"></div><div class="bar"><div class="fill" id="altbar"></div></div>
-</section>
+<div id="accounts"></div>
+<button class="btn add-account" id="addAccount">＋ Add another account</button>
 <div class="footer"><span id="saved">Saved on this device</span><button class="btn danger" id="reset">Reset this day ↺</button></div>
 </main>
 <script>
 (()=>{
-const tasks=['Login','Commission','Resin'],storageKey='tuskfizzy_daily_v1';
+const tasks=['Login','Commission','Resin'];
+const accountsKey='tuskfizzy_accounts_v1',recordsKey='tuskfizzy_daily_multi_v1',legacyKey='tuskfizzy_daily_v1';
 let selected=new Date();selected.setHours(12,0,0,0);
-let records={};try{records=JSON.parse(localStorage.getItem(storageKey)||'{}')||{}}catch(e){}
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const today=()=>{let d=new Date();d.setHours(12,0,0,0);return d};
-const fresh=()=>({main:[false,false,false],alt:[false,false,false]});
-const current=()=>records[key(selected)]||fresh();
-function save(){try{localStorage.setItem(storageKey,JSON.stringify(records));document.getElementById('saved').textContent='✓ Saved on this device'}catch(e){document.getElementById('saved').textContent='Could not save — storage unavailable'}}
+const starter=[
+ {id:'main',name:'Main TUSKFiZZY',portrait:'https://genshin-impact.fandom.com/wiki/Special:FilePath/Lohen_Portrait.png'},
+ {id:'alt',name:'Alternate TUSKFiZZY',portrait:'https://genshin-impact.fandom.com/wiki/Special:FilePath/Tsaritsa_Portrait.png'}
+];
+let accounts=[],records={};
+try{accounts=JSON.parse(localStorage.getItem(accountsKey)||'null')||[]}catch(e){}
+try{records=JSON.parse(localStorage.getItem(recordsKey)||'{}')||{}}catch(e){}
+if(!accounts.length){
+ accounts=starter.map(a=>({...a}));
+ let legacy={};try{legacy=JSON.parse(localStorage.getItem(legacyKey)||'{}')||{}}catch(e){}
+ Object.entries(legacy).forEach(([date,old])=>{
+  records[date]={main:Array.isArray(old.main)?old.main:[false,false,false],alt:Array.isArray(old.alt)?old.alt:[false,false,false]};
+ });
+ saveAll();
+}
+function saveAll(){try{localStorage.setItem(accountsKey,JSON.stringify(accounts));localStorage.setItem(recordsKey,JSON.stringify(records));document.getElementById('saved').textContent='✓ Saved on this device'}catch(e){document.getElementById('saved').textContent='Could not save — storage unavailable'}}
+const fresh=()=>Object.fromEntries(accounts.map(a=>[a.id,[false,false,false]]));
+function current(){let r=records[key(selected)];if(!r){r=fresh();}accounts.forEach(a=>{if(!Array.isArray(r[a.id]))r[a.id]=[false,false,false]});return r}
+function makePortrait(src,name){
+ const img=document.createElement('img');img.className='portrait';img.alt=name+' portrait';img.src=src||'';img.onerror=()=>{const fallback=document.createElement('div');fallback.className='portrait portrait-fallback';fallback.textContent=(name.trim()[0]||'?').toUpperCase();img.replaceWith(fallback)};return img;
+}
 function render(){
  const k=key(selected),d=current(),todayKey=key(today());
  document.getElementById('date').textContent=selected.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
  document.getElementById('daylabel').textContent=k===todayKey?"Today's checklist":k<todayKey?'Previous day':'Future date';
  document.getElementById('next').disabled=k>=todayKey;
- for(const a of ['main','alt']){
-  const host=document.getElementById(a);host.replaceChildren();
+ const host=document.getElementById('accounts');host.replaceChildren();
+ let completed=0,total=accounts.length*tasks.length;
+ accounts.forEach((account,index)=>{
+  const section=document.createElement('section');section.className='account';
+  const top=document.createElement('div');top.className='accounttop';
+  const identity=document.createElement('div');identity.className='identity';
+  identity.append(makePortrait(account.portrait,account.name));
+  const meta=document.createElement('div');meta.className='accountmeta';
+  const cap=document.createElement('div');cap.className='smallcap';cap.textContent='ACCOUNT '+String(index+1).padStart(2,'0');
+  const heading=document.createElement('h2');heading.textContent=account.name;
+  meta.append(cap,heading);identity.append(meta);
+  const count=document.createElement('div');count.className='count';count.textContent=d[account.id].filter(Boolean).length+'/3';
+  top.append(identity,count);section.append(top);
+  const taskHost=document.createElement('div');taskHost.className='tasks';
   tasks.forEach((task,i)=>{
-   const label=document.createElement('label');label.className='task'+(d[a][i]?' done':'');
-   const input=document.createElement('input');input.type='checkbox';input.checked=!!d[a][i];
-   input.addEventListener('change',()=>{if(!records[k])records[k]=fresh();records[k][a][i]=input.checked;save();render()});
-   const span=document.createElement('span');span.textContent=task;label.append(input,span);host.append(label);
+   const label=document.createElement('label');label.className='task'+(d[account.id][i]?' done':'');
+   const input=document.createElement('input');input.type='checkbox';input.checked=!!d[account.id][i];
+   input.addEventListener('change',()=>{if(!records[k])records[k]=fresh();records[k][account.id][i]=input.checked;saveAll();render()});
+   const span=document.createElement('span');span.textContent=task;label.append(input,span);taskHost.append(label);
   });
-  const n=d[a].filter(Boolean).length;document.getElementById(a+'count').textContent=n+'/3';document.getElementById(a+'bar').style.width=(n/3*100)+'%';
- }
- const n=d.main.filter(Boolean).length+d.alt.filter(Boolean).length;
- document.getElementById('overallcount').textContent=n+' of 6 completed';
- document.getElementById('percent').textContent=Math.round(n/6*100)+'%';
- document.getElementById('overallbar').style.width=(n/6*100)+'%';
+  section.append(taskHost);
+  const n=d[account.id].filter(Boolean).length;completed+=n;
+  const bar=document.createElement('div');bar.className='bar';const fill=document.createElement('div');fill.className='fill';fill.style.width=(n/3*100)+'%';bar.append(fill);section.append(bar);
+  const actions=document.createElement('div');actions.className='account-actions';
+  const edit=document.createElement('button');edit.className='btn';edit.textContent='Edit profile';edit.onclick=()=>editAccount(account.id);
+  actions.append(edit);
+  if(index>1){const remove=document.createElement('button');remove.className='btn danger';remove.textContent='Remove';remove.onclick=()=>removeAccount(account.id);actions.append(remove)}
+  section.append(actions);host.append(section);
+ });
+ document.getElementById('overallcount').textContent=completed+' of '+total+' completed';
+ document.getElementById('percent').textContent=(total?Math.round(completed/total*100):0)+'%';
+ document.getElementById('overallbar').style.width=(total?completed/total*100:0)+'%';
 }
+function editAccount(id){
+ const account=accounts.find(a=>a.id===id);if(!account)return;
+ const name=prompt('Account name:',account.name);if(name===null)return;
+ const portrait=prompt('Portrait image URL (leave blank to use initials):',account.portrait||'');if(portrait===null)return;
+ account.name=name.trim()||account.name;account.portrait=portrait.trim();saveAll();render();
+}
+function removeAccount(id){
+ const account=accounts.find(a=>a.id===id);if(!account||!confirm('Remove '+account.name+' and its saved check-ins from this device?'))return;
+ accounts=accounts.filter(a=>a.id!==id);Object.values(records).forEach(r=>delete r[id]);saveAll();render();
+}
+document.getElementById('addAccount').onclick=()=>{
+ const name=prompt('Enter the new account name:');if(name===null||!name.trim())return;
+ const portrait=prompt('Portrait image URL (optional):','');if(portrait===null)return;
+ const id='account_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
+ accounts.push({id,name:name.trim(),portrait:portrait.trim()});
+ Object.values(records).forEach(r=>r[id]=[false,false,false]);saveAll();render();
+};
 document.getElementById('prev').onclick=()=>{selected.setDate(selected.getDate()-1);render()};
 document.getElementById('next').onclick=()=>{if(key(selected)<key(today())){selected.setDate(selected.getDate()+1);render()}};
 document.getElementById('today').onclick=()=>{selected=today();render()};
-document.getElementById('reset').onclick=()=>{if(confirm('Reset all six checkboxes for '+key(selected)+'?')){delete records[key(selected)];save();render()}};
+document.getElementById('reset').onclick=()=>{if(confirm('Reset all account checkboxes for '+key(selected)+'?')){delete records[key(selected)];saveAll();render()}};
 render();
 setInterval(()=>{if(key(selected)===key(today()))render()},30000);
 let installEvent;
