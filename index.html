@@ -192,36 +192,52 @@ async function refreshGenshinAccount(accountItem,statusEl){
    statusEl.textContent='Could not refresh the public count: '+(error&&error.message?error.message:'unknown error')+'. Your last saved count is kept.';
   }
  }
- function getWishPools(){return {'301':'Character Event','302':'Weapon Event','200':'Standard','100':'Beginner','400':'Chronicled Wish'}}
- function normalizeUIGFWish(w){
-  return {id:String(w.id||''),uid:String(w.uid||''),gacha_type:String(w.gacha_type||''),item_id:String(w.item_id||''),count:String(w.count||'1'),time:String(w.time||''),name:String(w.name||'Unknown item'),item_type:String(w.item_type||''),rank_type:String(w.rank_type||'')};
+ function getWishPools(){return {'100':'Beginner','200':'Standard','301':'Character Event','302':'Weapon Event','500':'Chronicled Wish'}}
+ function extractUIGFAccount(data,expectedUid){
+  if(data&&Array.isArray(data.hk4e)){
+   let matches=data.hk4e;
+   if(expectedUid)matches=matches.filter(x=>String(x.uid||'')===String(expectedUid));
+   if(matches.length!==1)throw new Error(matches.length?'More than one Genshin account is in this file; select a file for one account.':'No Genshin records match the selected account UID.');
+   return {uid:String(matches[0].uid||''),list:matches[0].list||[],version:data.info&&data.info.version||'UIGF 4+'};
+  }
+  if(data&&Array.isArray(data.list)){
+   const uid=String((data.info&&data.info.uid)||data.uid||'');
+   if(expectedUid&&uid&&uid!==String(expectedUid))throw new Error('This file belongs to UID '+uid+', but the selected account is UID '+expectedUid+'.');
+   return {uid,list:data.list,version:(data.info&&(data.info.uigf_version||data.info.version))||'UIGF legacy'};
+  }
+  throw new Error('This is not a supported Genshin UIGF JSON file.');
  }
  function importUIGFWishes(accountItem,data){
-  if(!data||!Array.isArray(data.list))throw new Error('This file does not contain a UIGF wish list.');
-  const info=data.info||{},fileUid=String(info.uid||data.uid||'');
-  if(fileUid&&accountItem.uid&&fileUid!==String(accountItem.uid))throw new Error('This UIGF file belongs to UID '+fileUid+', but the selected account is UID '+accountItem.uid+'.');
-  const poolTypes=getWishPools(),valid=data.list.map(normalizeUIGFWish).filter(w=>poolTypes[w.gacha_type]&&w.time&&w.name);
-  if(!valid.length)throw new Error('No supported wish records were found in this file.');
+  const source=extractUIGFAccount(data,accountItem.uid);
+  if(source.uid&&accountItem.uid&&source.uid!==String(accountItem.uid))throw new Error('The UID in this file does not match the selected account.');
+  const valid=source.list.filter(w=>w&&w.time&&w.item_id&&w.id&&w.gacha_type&&w.rank_type&&w.name);
+  if(!valid.length)throw new Error('No valid Genshin wish records were found in this file.');
   const existing=Array.isArray(accountItem.wishHistory)?accountItem.wishHistory:[];
-  const seen=new Set(existing.map(w=>[w.gacha_type,w.id,w.time,w.item_id].join('|')));
+  const seen=new Set(existing.map(w=>String(w.id)));
   let added=0;
-  valid.forEach(w=>{const key=[w.gacha_type,w.id,w.time,w.item_id].join('|');if(!seen.has(key)){existing.push(w);seen.add(key);added++}});
-  existing.sort((a,b)=>String(a.time).localeCompare(String(b.time)));
+  valid.forEach(w=>{
+   const rawType=String(w.gacha_type),poolType=String(w.uigf_gacha_type||({'400':'301'}[rawType]||rawType));
+   if(!getWishPools()[poolType])return;
+   const item={id:String(w.id),uid:source.uid,gacha_type:poolType,api_gacha_type:rawType,item_id:String(w.item_id),count:String(w.count||'1'),time:String(w.time),name:String(w.name),item_type:String(w.item_type||''),rank_type:String(w.rank_type)};
+   if(!seen.has(item.id)){existing.push(item);seen.add(item.id);added++}
+  });
+  if(!added&&!existing.length)throw new Error('No supported Genshin banner types were found.');
+  existing.sort((a,b)=>String(a.time).localeCompare(String(b.time))||String(a.id).localeCompare(String(b.id)));
   accountItem.wishHistory=existing;
   accountItem.wishHistoryImportedAt=Date.now();
-  accountItem.wishHistorySource='UIGF';
+  accountItem.wishHistorySource=source.version;
   saveGenshinAccounts();
   return {added,total:existing.length,ignored:valid.length-added};
  }
  function calculateWishPity(records){
-  const ordered=records.slice().sort((a,b)=>String(a.time).localeCompare(String(b.time)));
-  let since5=0,since4=0,last5=null,last4=null;
+  const ordered=records.slice().sort((a,b)=>String(a.time).localeCompare(String(b.time))||String(a.id).localeCompare(String(b.id)));
+  let since5=0,since4=0;
   ordered.forEach(w=>{
    const rank=Number(w.rank_type);
-   if(rank===5){since5=0;last5=w}else since5++;
-   if(rank===4||rank===5){since4=0;last4=w}else since4++;
+   if(rank===5)since5=0;else since5++;
+   if(rank===4||rank===5)since4=0;else since4++;
   });
-  return {since5,since4,last5,last4,count:ordered.length};
+  return {since5,since4,count:ordered.length};
  }
  function showGenshinView(view){
   genshinView=view;
@@ -356,6 +372,7 @@ async function refreshGenshinAccount(accountItem,statusEl){
    addText('p','','Selected account: '+account.name+(account.uid?' · UID '+account.uid:''));
    addText('div','genshin-note','Import a UIGF JSON wish-history file. The file is processed locally in this app; no HoYoLAB password or login cookie is requested.');
    const status=addText('div','genshin-note','No wish history imported yet.');
+   const standardLink=document.createElement('a');standardLink.href='https://uigf.org/en/standards/uigf.html';standardLink.target='_blank';standardLink.rel='noopener noreferrer';standardLink.textContent='UIGF format standard';standardLink.className='gprofile-muted';standardLink.style.display='inline-block';standardLink.style.marginTop='8px';body.append(standardLink);
    const actions=addText('div','genshin-actions','');
    const file=document.createElement('input');file.type='file';file.accept='.json,application/json';file.style.display='none';
    const importBtn=document.createElement('button');importBtn.className='btn primary';importBtn.type='button';importBtn.textContent='Import UIGF JSON';importBtn.onclick=()=>file.click();actions.append(importBtn);
@@ -371,8 +388,8 @@ async function refreshGenshinAccount(accountItem,statusEl){
      addText('strong','',String(pity.since5),card);addText('span','',label+' · 5★ pity',card);
      addText('span','',pity.since4+' pulls since 4★',card);
     });
-    addText('p','gprofile-muted','Pity is calculated separately for each banner type from the imported records. A 5★ or 4★ resets the corresponding counter.',pitySection);
-    addText('p','gprofile-muted','50/50 and guarantee status are not inferred because UIGF records do not reliably identify whether a 5★ was the featured item. Chronicled Wish fate points are not calculated.',pitySection);
+    addText('p','gprofile-muted','Pity uses the UIGF banner type so concurrent character-event banners share the same counter. A 5★ resets both counters; a 4★ resets the 4★ counter. Counts only cover wishes present in your imported file.',pitySection);
+    addText('p','gprofile-muted','50/50 guarantee and weapon fate points are not calculated yet. Import your full available history for the most reliable pity count.',pitySection);
     const history=addText('div','gprofile-section','');addText('h3','','Recent wishes ('+records.length+')',history);
     records.slice().sort((a,b)=>String(b.time).localeCompare(String(a.time))).slice(0,30).forEach(w=>{
      const row=addText('div','genshin-account-row','',history),info=addText('div','','',row);
