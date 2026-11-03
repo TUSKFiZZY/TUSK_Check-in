@@ -1,0 +1,43 @@
+{
+  "name": "tuskfizzy-check-in",
+  "version": "1.0.0",
+  "description": "TUSKFiZZY Daily Check-in desktop app",
+  "main": "electron/main.js",
+  "author": "TUSKFiZZY",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.tuskfizzy.checkin",
+    "productName": "TUSKFiZZY",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TUSKFiZZY"
+    }
+  }
+}
