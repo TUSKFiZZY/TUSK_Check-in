@@ -49,8 +49,6 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
   <h2 id="profileDialogTitle">Add account</h2>
   <label for="profileName">Account name</label>
   <input id="profileName" type="text" maxlength="40" placeholder="Enter account name" required>
-  <label for="profilePortrait">Portrait image URL (optional)</label>
-  <input id="profilePortrait" type="url" placeholder="https://...">
   <div class="dialog-actions">
    <button class="btn" type="button" id="profileCancel">Cancel</button>
    <button class="btn primary" type="submit" id="profileSave">Save account</button>
@@ -200,7 +198,6 @@ function openProfileDialog(id=null){
  const account=id?accounts.find(a=>a.id===id):null;
  document.getElementById('profileDialogTitle').textContent=account?'Edit profile':'Add account';
  document.getElementById('profileName').value=account?account.name:'';
- document.getElementById('profilePortrait').value=account?(account.portrait||''):'';
  document.getElementById('profileSave').textContent=account?'Save changes':'Add account';
  profileDialog.showModal();
  document.getElementById('profileName').focus();
@@ -210,14 +207,13 @@ document.getElementById('profileCancel').onclick=()=>profileDialog.close();
 document.getElementById('profileForm').onsubmit=e=>{
  e.preventDefault();
  const name=document.getElementById('profileName').value.trim();
- const portrait=document.getElementById('profilePortrait').value.trim();
  if(!name)return;
  if(editingAccountId){
   const account=accounts.find(a=>a.id===editingAccountId);
-  if(account){account.name=name;account.portrait=portrait}
+  if(account){account.name=name}
  }else{
   const id='account_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
-  accounts.push({id,name,portrait});
+  accounts.push({id,name,portrait:''});
   Object.values(records).forEach(r=>r[id]=[false,false,false]);
  }
  saveAll();profileDialog.close();render();
