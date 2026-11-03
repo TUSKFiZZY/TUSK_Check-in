@@ -61,7 +61,8 @@ ipcMain.handle("hoyo:daily-note", async (event, args) => {
   if (!["os_asia", "os_usa", "os_euro", "os_cht"].includes(server)) throw new Error("Select a valid Genshin server.");
 
   const t = Math.floor(Date.now() / 1000);
-  const r = crypto.randomBytes(3).toString("hex");
+  const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const r = Array.from(crypto.randomBytes(6), byte => alphabet[byte % alphabet.length]).join("");
   const salt = "6cqshh5dhw73bzxn20oexa9k516chk7s";
   const ds = t + "," + r + "," + crypto.createHash("md5")
     .update("salt=" + salt + "&t=" + t + "&r=" + r).digest("hex");
