@@ -141,6 +141,47 @@ ipcMain.handle("hoyo:daily-note", async (event, args) => {
   };
 });
 
+ipcMain.handle("wish:import", async (event, rawUrl) => {
+ if (!isTracker(event)) throw new Error("Untrusted tracker page.");
+ let supplied;
+ try { supplied = new URL(String(rawUrl || "")); } catch { throw new Error("Paste a valid wish-history URL."); }
+ if (supplied.protocol !== "https:" || !/(^|\\.)hoyoverse\\.com$|(^|\\.)mihoyo\\.com$/i.test(supplied.hostname) || !/gacha/i.test(supplied.pathname)) {
+  throw new Error("This does not look like a supported HoYoverse Genshin wish-history URL.");
+ }
+ const region = supplied.searchParams.get("region") || "";
+ const api = new URL(supplied.toString());
+ api.hostname = /^cn_/i.test(region) ? "public-operation-hk4e.mihoyo.com" : "public-operation-hk4e-sg.hoyoverse.com";
+ api.pathname = "/gacha_info/api/getGachaLog";
+ api.hash = "";
+ const all = [];
+ const types = ["100","200","301","302","500"];
+ for (const type of types) {
+  let endId = "0";
+  for (let page = 1; page <= 100; page++) {
+   const requestUrl = new URL(api.toString());
+   requestUrl.searchParams.set("lang", "en");
+   requestUrl.searchParams.set("gacha_type", type);
+   requestUrl.searchParams.set("size", "20");
+   requestUrl.searchParams.set("page", String(page));
+   requestUrl.searchParams.set("end_id", endId);
+   let response;
+   try { response = await net.fetch(requestUrl.toString(), { method: "GET", headers: { "Accept": "application/json", "User-Agent": "Mozilla/5.0 TUSKFiZZY Wish History Importer" }, signal: AbortSignal.timeout(20000) }); }
+   catch (error) { throw new Error("Could not connect to HoYoverse wish history. Check your connection and try again."); }
+   if (!response.ok) throw new Error("HoYoverse wish-history request failed (" + response.status + ").");
+   const payload = await response.json();
+   if (Number(payload.retcode) !== 0) throw new Error(payload.message || "HoYoverse rejected the wish-history link. It may have expired.");
+   const list = payload.data && Array.isArray(payload.data.list) ? payload.data.list : [];
+   if (!list.length) break;
+   all.push(...list);
+   const nextId = String(list[list.length - 1].id || "");
+   if (!nextId || nextId === endId || list.length < 20) break;
+   endId = nextId;
+  }
+ }
+ if (!all.length) throw new Error("No wish records were returned. Check that Wish History has loaded and the copied link is current.");
+ return { list: all };
+});
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 560, height: 900, minWidth: 380, minHeight: 620,
