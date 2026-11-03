@@ -77,7 +77,7 @@ const oldDefaultIds=['main','alt'];
 const hadOldDefaults=accounts.some(a=>oldDefaultIds.includes(a.id))||Object.values(records).some(day=>day&&oldDefaultIds.some(id=>Object.prototype.hasOwnProperty.call(day,id)));
 accounts=accounts.filter(a=>!oldDefaultIds.includes(a.id));
 Object.values(records).forEach(day=>{if(day&&typeof day==='object')oldDefaultIds.forEach(id=>delete day[id])});
-if(hadOldDefaults){try{localStorage.removeItem(legacyKey)}catch(e){}}
+if(hadOldDefaults){try{localStorage.setItem(accountsKey,JSON.stringify(accounts));localStorage.setItem(recordsKey,JSON.stringify(records));localStorage.removeItem(legacyKey)}catch(e){}}
 
 function saveAll(){try{localStorage.setItem(accountsKey,JSON.stringify(accounts));localStorage.setItem(recordsKey,JSON.stringify(records));document.getElementById('saved').textContent='✓ Saved on this device'}catch(e){document.getElementById('saved').textContent='Could not save — storage unavailable'}}
 const fresh=()=>Object.fromEntries(accounts.map(a=>[a.id,[false,false,false]]));
