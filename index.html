@@ -235,7 +235,7 @@ let showMonth=false;
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const today=()=>{let d=new Date();d.setHours(12,0,0,0);return d};
-function updateClock(){const el=document.getElementById('clock');if(el)el.textContent=new Date().toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function updateClock(){try{const el=document.getElementById('clock');if(!el)return;const now=new Date();let value;try{value=new Intl.DateTimeFormat(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(now)}catch(formatError){value=`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`}el.textContent=value}catch(clockError){/* Keep clock failures isolated from the tracker. */}}
 let accounts=[],records={};
 try{accounts=JSON.parse(localStorage.getItem(accountsKey)||'null')||[]}catch(e){}
 try{records=JSON.parse(localStorage.getItem(recordsKey)||'{}')||{}}catch(e){}
@@ -257,7 +257,6 @@ function renderMonth(){
  panel.replaceChildren();
  panel.hidden=!showMonth;
  document.getElementById('accounts').hidden=showMonth;
- document.getElementById('addAccount').hidden=showMonth;
  document.querySelector('.summary').hidden=showMonth;
  document.querySelector('.footer').hidden=showMonth;
  document.getElementById('monthToggle').textContent=showMonth?'Day view':'Month overview';
@@ -384,14 +383,16 @@ function removeAccount(id){
  const account=accounts.find(a=>a.id===id);if(!account||!confirm('Remove '+account.name+' and its saved check-ins from this device?'))return;
  accounts=accounts.filter(a=>a.id!==id);Object.values(records).forEach(r=>delete r[id]);saveAll();render();
 }
-document.getElementById('addAccount').onclick=()=>openProfileDialog();
 document.getElementById('prev').onclick=()=>{selected.setDate(selected.getDate()-1);render()};
 document.getElementById('next').onclick=()=>{if(key(selected)<key(today())){selected.setDate(selected.getDate()+1);render()}};
 document.getElementById('today').onclick=()=>{selected=today();monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);showMonth=false;render()};
 document.getElementById('monthToggle').onclick=()=>{showMonth=!showMonth;monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);render()};
 document.getElementById('reset').onclick=()=>{if(confirm('Reset all account checkboxes for '+key(selected)+'?')){delete records[key(selected)];saveAll();render()}};
-render();
+updateClock();
 setInterval(updateClock,1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateClock()});
+window.addEventListener('pageshow',updateClock);
+render();
 setInterval(()=>{if(key(selected)===key(today()))render()},30000);
 let installEvent;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e;document.getElementById('install').style.display='block'});
