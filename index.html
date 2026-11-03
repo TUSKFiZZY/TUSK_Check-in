@@ -19,7 +19,7 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
 .bar{height:6px;border-radius:9px;background:#39334b;overflow:hidden;margin-top:13px}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),#d1aaff);border-radius:9px;transition:width .2s}
 .account h2{font-size:18px;margin:4px 0 0}.tasks{display:grid;gap:9px;margin-top:16px}.task{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid var(--line);border-radius:12px;background:#171421;cursor:pointer;user-select:none}.task input{width:20px;height:20px;accent-color:var(--accent);margin:0}.task span{font-weight:650}.task.done span{text-decoration:line-through;color:var(--muted)}
 .footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:17px 2px;color:var(--muted);font-size:11px}.danger{color:#ffb4c0}.install{display:none;width:100%;margin:0 0 12px;background:var(--accent2);border:0;font-weight:750}
-.accounttop{align-items:center}.identity{display:flex;align-items:center;gap:12px;min-width:0}.portrait{width:66px;height:66px;flex:0 0 66px;border-radius:15px;object-fit:cover;background:linear-gradient(145deg,#574078,#241d34);border:1px solid var(--line)}.portrait-fallback{display:grid;place-items:center;font-size:23px;font-weight:850;color:#e7d7ff}.accountmeta{min-width:0}.accountmeta h2{overflow-wrap:anywhere}.account-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px}.account-actions .btn{padding:6px 9px;font-size:11px}.add-account{width:100%;margin:5px 0 12px;border-style:dashed;color:var(--accent);font-weight:750;padding:13px}.empty-note{color:var(--muted);font-size:12px;margin:12px 2px 0}
+.accounttop{align-items:center}.identity{display:flex;align-items:center;gap:12px;min-width:0}.portrait{width:66px;height:66px;flex:0 0 66px;border-radius:15px;object-fit:cover;background:linear-gradient(145deg,#574078,#241d34);border:1px solid var(--line)}.portrait-fallback{display:grid;place-items:center;font-size:23px;font-weight:850;color:#e7d7ff}.accountmeta{min-width:0}.accountmeta h2{overflow-wrap:anywhere}.account-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px}.account-actions .btn{padding:6px 9px;font-size:11px}.add-account{width:100%;margin:5px 0 12px;border-style:dashed;color:var(--accent);font-weight:750;padding:13px}.empty-note{color:var(--muted);font-size:12px;margin:12px 2px 0}.profile-dialog{width:min(420px,calc(100% - 28px));border:1px solid var(--line);border-radius:18px;padding:20px;background:var(--panel2);color:var(--text);box-shadow:0 20px 70px #0009}.profile-dialog::backdrop{background:#080610bb;backdrop-filter:blur(3px)}.profile-dialog h2{font-size:18px;margin:0 0 14px}.profile-dialog label{display:block;color:var(--muted);font-size:12px;margin:12px 0 5px}.profile-dialog input{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:#171421;color:var(--text);font:inherit}.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.dialog-actions .primary{background:var(--accent2);border-color:var(--accent2);font-weight:750}.empty-accounts{padding:20px;text-align:center;border:1px dashed var(--line);border-radius:16px;color:var(--muted);margin:14px 0}
 @media(min-width:560px){main{padding-top:34px}.summary,.account{padding:20px}}
 .account-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:16px;align-items:start}.account-body .tasks{margin-top:0}.hoyo-box{padding:12px;border:1px solid var(--line);border-radius:12px;background:#171421;min-width:0}.hoyo-box label{display:block;color:var(--muted);font-size:11px;margin:8px 0 4px}.hoyo-box input,.hoyo-box select{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--text);font:inherit;font-size:13px}.hoyo-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.hoyo-actions .btn{padding:7px 9px;font-size:11px}.hoyo-status{font-size:11px;color:var(--muted);margin-top:8px;white-space:pre-wrap}.hoyo-data{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.hoyo-stat{padding:9px;border:1px solid var(--line);border-radius:9px;background:var(--panel);min-width:0}.hoyo-stat strong{display:block;font-size:17px;line-height:1.3}.hoyo-stat span{display:block;color:var(--muted);font-size:10px;margin-top:3px}.hoyo-empty{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5}@media(max-width:520px){.account-body{grid-template-columns:1fr}}</style>
 </head>
@@ -43,7 +43,20 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
 </section>
 <section class="month-view" id="monthView" hidden></section>
 <div id="accounts"></div>
-<button class="btn add-account" id="addAccount">＋ Add another account</button>
+<button class="btn add-account" id="addAccount">＋ Add account</button>
+<dialog class="profile-dialog" id="profileDialog">
+ <form id="profileForm">
+  <h2 id="profileDialogTitle">Add account</h2>
+  <label for="profileName">Account name</label>
+  <input id="profileName" type="text" maxlength="40" placeholder="Enter account name" required>
+  <label for="profilePortrait">Portrait image URL (optional)</label>
+  <input id="profilePortrait" type="url" placeholder="https://...">
+  <div class="dialog-actions">
+   <button class="btn" type="button" id="profileCancel">Cancel</button>
+   <button class="btn primary" type="submit" id="profileSave">Save account</button>
+  </div>
+ </form>
+</dialog>
 <div class="footer"><span id="saved">Saved on this device</span><button class="btn danger" id="reset">Reset this day ↺</button></div>
 </main>
 <script>
@@ -63,13 +76,16 @@ const starter=[
 let accounts=[],records={};
 try{accounts=JSON.parse(localStorage.getItem(accountsKey)||'null')||[]}catch(e){}
 try{records=JSON.parse(localStorage.getItem(recordsKey)||'{}')||{}}catch(e){}
-if(!accounts.length){
- accounts=starter.map(a=>({...a}));
+const hasSavedAccounts=localStorage.getItem(accountsKey)!==null;
+if(!hasSavedAccounts){
  let legacy={};try{legacy=JSON.parse(localStorage.getItem(legacyKey)||'{}')||{}}catch(e){}
- Object.entries(legacy).forEach(([date,old])=>{
-  records[date]={main:Array.isArray(old.main)?old.main:[false,false,false],alt:Array.isArray(old.alt)?old.alt:[false,false,false]};
- });
- saveAll();
+ if(Object.keys(legacy).length){
+  accounts=starter.map(a=>({...a}));
+  Object.entries(legacy).forEach(([date,old])=>{
+   records[date]={main:Array.isArray(old.main)?old.main:[false,false,false],alt:Array.isArray(old.alt)?old.alt:[false,false,false]};
+  });
+  saveAll();
+ }
 }
 function saveAll(){try{localStorage.setItem(accountsKey,JSON.stringify(accounts));localStorage.setItem(recordsKey,JSON.stringify(records));document.getElementById('saved').textContent='✓ Saved on this device'}catch(e){document.getElementById('saved').textContent='Could not save — storage unavailable'}}
 const fresh=()=>Object.fromEntries(accounts.map(a=>[a.id,[false,false,false]]));
@@ -124,6 +140,7 @@ function render(){
  document.getElementById('next').disabled=k>=todayKey;
  const host=document.getElementById('accounts');host.replaceChildren();
  let completed=0,total=accounts.length*tasks.length;
+ if(!accounts.length){const empty=document.createElement('div');empty.className='empty-accounts';empty.textContent='No accounts added yet. Select “Add account” to create your first profile.';host.append(empty)}
  accounts.forEach((account,index)=>{
   const section=document.createElement('section');section.className='account';
   const top=document.createElement('div');top.className='accounttop';
@@ -181,23 +198,40 @@ function render(){
  document.getElementById('percent').textContent=(total?Math.round(completed/total*100):0)+'%';
  document.getElementById('overallbar').style.width=(total?completed/total*100:0)+'%';
 }
-function editAccount(id){
- const account=accounts.find(a=>a.id===id);if(!account)return;
- const name=prompt('Account name:',account.name);if(name===null)return;
- const portrait=prompt('Portrait image URL (leave blank to use initials):',account.portrait||'');if(portrait===null)return;
- account.name=name.trim()||account.name;account.portrait=portrait.trim();saveAll();render();
+const profileDialog=document.getElementById('profileDialog');
+let editingAccountId=null;
+function openProfileDialog(id=null){
+ editingAccountId=id;
+ const account=id?accounts.find(a=>a.id===id):null;
+ document.getElementById('profileDialogTitle').textContent=account?'Edit profile':'Add account';
+ document.getElementById('profileName').value=account?account.name:'';
+ document.getElementById('profilePortrait').value=account?(account.portrait||''):'';
+ document.getElementById('profileSave').textContent=account?'Save changes':'Add account';
+ profileDialog.showModal();
+ document.getElementById('profileName').focus();
 }
+function editAccount(id){openProfileDialog(id)}
+document.getElementById('profileCancel').onclick=()=>profileDialog.close();
+document.getElementById('profileForm').onsubmit=e=>{
+ e.preventDefault();
+ const name=document.getElementById('profileName').value.trim();
+ const portrait=document.getElementById('profilePortrait').value.trim();
+ if(!name)return;
+ if(editingAccountId){
+  const account=accounts.find(a=>a.id===editingAccountId);
+  if(account){account.name=name;account.portrait=portrait}
+ }else{
+  const id='account_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
+  accounts.push({id,name,portrait});
+  Object.values(records).forEach(r=>r[id]=[false,false,false]);
+ }
+ saveAll();profileDialog.close();render();
+};
 function removeAccount(id){
  const account=accounts.find(a=>a.id===id);if(!account||!confirm('Remove '+account.name+' and its saved check-ins from this device?'))return;
  accounts=accounts.filter(a=>a.id!==id);Object.values(records).forEach(r=>delete r[id]);saveAll();render();
 }
-document.getElementById('addAccount').onclick=()=>{
- const name=prompt('Enter the new account name:');if(name===null||!name.trim())return;
- const portrait=prompt('Portrait image URL (optional):','');if(portrait===null)return;
- const id='account_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
- accounts.push({id,name:name.trim(),portrait:portrait.trim()});
- Object.values(records).forEach(r=>r[id]=[false,false,false]);saveAll();render();
-};
+document.getElementById('addAccount').onclick=()=>openProfileDialog();
 document.getElementById('prev').onclick=()=>{selected.setDate(selected.getDate()-1);render()};
 document.getElementById('next').onclick=()=>{if(key(selected)<key(today())){selected.setDate(selected.getDate()+1);render()}};
 document.getElementById('today').onclick=()=>{selected=today();monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);showMonth=false;render()};
