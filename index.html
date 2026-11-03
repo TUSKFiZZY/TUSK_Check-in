@@ -149,6 +149,41 @@ async function refreshGenshinAccount(accountItem,statusEl){
    statusEl.textContent='HoYoLAB opened in a separate window. Sign in there, then return and press Refresh.';
   }catch(error){statusEl.textContent=error&&error.message?error.message:'Could not open HoYoLAB.'}
  }
+ async function refreshPublicAchievementCount(accountItem,statusEl,force=false){
+  if(!accountItem.uid){statusEl.textContent='Add this account UID to retrieve its public achievement count.';return}
+  const ttl=Math.max(60,Number(accountItem.enkaProfile&&accountItem.enkaProfile.ttl)||300)*1000;
+  const age=Date.now()-Number(accountItem.enkaProfile&&accountItem.enkaProfile.fetchedAt||0);
+  if(!force&&accountItem.enkaProfile&&accountItem.enkaProfile.playerInfo&&age>=0&&age<ttl){
+   statusEl.textContent='Using Enka public profile cache · next refresh in about '+Math.ceil((ttl-age)/60000)+' min.';
+   return;
+  }
+  statusEl.textContent='Refreshing public achievement count from Enka.Network…';
+  try{
+   let data;
+   if(window.tuskfizzy&&typeof window.tuskfizzy.getEnkaProfile==='function')data=await window.tuskfizzy.getEnkaProfile(accountItem.uid);
+   else{
+    const response=await fetch('https://enka.network/api/uid/'+encodeURIComponent(accountItem.uid)+'/',{headers:{'Accept':'application/json'}});
+    if(!response.ok)throw new Error('Enka.Network request failed ('+response.status+').');
+    const raw=await response.json();
+    if(!raw.playerInfo)throw new Error('No public player profile was returned.');
+    data={uid:accountItem.uid,playerInfo:raw.playerInfo,avatarInfoList:Array.isArray(raw.avatarInfoList)?raw.avatarInfoList:[],ttl:Number(raw.ttl)||300,fetchedAt:Date.now(),cached:false};
+   }
+   if(!data||!data.playerInfo)throw new Error('Achievement count was not included in the public profile.');
+   data.fetchedAt=data.fetchedAt||Date.now();
+   accountItem.enkaProfile=data;accountItem.enkaUpdated=Date.now();
+   const count=Number(data.playerInfo.finishAchievementNum);
+   if(Number.isFinite(count)){
+    if(!Array.isArray(accountItem.achievementCountHistory))accountItem.achievementCountHistory=[];
+    const history=accountItem.achievementCountHistory,last=history[history.length-1];
+    if(!last||Number(last.count)!==count)history.push({count,at:Date.now()});
+    accountItem.achievementCountHistory=history.slice(-20);
+   }
+   saveGenshinAccounts();
+   statusEl.textContent='Updated from Enka.Network · '+new Date().toLocaleString()+'.';
+  }catch(error){
+   statusEl.textContent='Could not refresh the public count: '+(error&&error.message?error.message:'unknown error')+'. Your last saved count is kept.';
+  }
+ }
  function showGenshinView(view){
   genshinView=view;
   document.getElementById('moreMenu').hidden=true;
@@ -250,7 +285,34 @@ async function refreshGenshinAccount(accountItem,statusEl){
    }else addText('p','gprofile-muted','Sign in using Connect HoYoLAB, then refresh. Battle Chronicle visibility may need to be public.',hoyo);
    if(account.dailyNote){const daily=addText('div','gprofile-section','');addText('h3','','Live Daily Note',daily);const grid=addText('div','gprofile-grid','',daily);[[account.dailyNote.resin+'/'+account.dailyNote.maxResin,'Original Resin'],[account.dailyNote.commissions+'/'+account.dailyNote.totalCommissions,'Daily Commissions'],[account.dailyNote.expeditions+'/'+account.dailyNote.maxExpeditions,'Expeditions'],[account.dailyNote.extraRewardClaimed?'Claimed':'Not claimed','Commission bonus']].forEach(([v,l])=>{const x=addText('div','gprofile-stat','',grid);addText('strong','',String(v),x);addText('span','',l,x)})}
   }else if(view==='achievements'){
-   addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nAchievement data is not connected yet.');
+   const enkaInfo=account.enkaProfile&&account.enkaProfile.playerInfo;
+   const chronicleStats=account.battleChronicle&&account.battleChronicle.stats;
+   const enkaCount=enkaInfo&&Number.isFinite(Number(enkaInfo.finishAchievementNum))?Number(enkaInfo.finishAchievementNum):null;
+   const chronicleCount=chronicleStats&&Number.isFinite(Number(chronicleStats.achievements))?Number(chronicleStats.achievements):null;
+   const count=enkaCount!==null?enkaCount:chronicleCount;
+   addText('p','','Selected account: '+account.name);
+   addText('div','genshin-note','This page uses public profile data only. It does not ask for or store HoYoLAB cookies.');
+   const status=addText('div','genshin-note',account.uid?'Checking public achievement count…':'Add a Genshin UID to enable automatic count updates.');
+   const refresh=document.createElement('button');refresh.className='btn primary';refresh.type='button';refresh.textContent='Refresh achievement count';refresh.disabled=!account.uid;refresh.onclick=async()=>{await refreshPublicAchievementCount(account,status,true);showGenshinView('achievements')};
+   const actions=addText('div','genshin-actions','');actions.append(refresh);
+   const section=addText('div','gprofile-section','');addText('h3','','Achievement progress',section);
+   if(count!==null){
+    const grid=addText('div','gprofile-grid','',section),stat=addText('div','gprofile-stat','',grid);
+    addText('strong','',count.toLocaleString(),stat);addText('span','','Completed achievements',stat);
+    addText('p','gprofile-muted',enkaCount!==null?'Source: Enka.Network public profile':'Source: HoYoLAB Battle Chronicle stats',section);
+   }else addText('p','gprofile-muted','No achievement count is saved yet. Add your UID and refresh the public profile count.',section);
+   const history=Array.isArray(account.achievementCountHistory)?account.achievementCountHistory:[];
+   addText('h3','','Count history',section);
+   if(history.length){
+    const list=addText('div','gprofile-grid','',section);
+    history.slice().reverse().forEach((item,index)=>{
+     const card=addText('div','gprofile-stat','',list),previous=history[history.length-1-index-1];
+     addText('strong','',Number(item.count).toLocaleString()+(previous?' ('+(Number(item.count)-Number(previous.count)>0?'+':'')+(Number(item.count)-Number(previous.count))+')':''),card);
+     addText('span','',new Date(item.at).toLocaleDateString()+' · completed total',card);
+    });
+   }else addText('p','gprofile-muted','Your count snapshots will appear here after the first successful refresh. Only count changes are saved on this device.',section);
+   addText('p','gprofile-muted','Limit: the public API exposes the completed total, not individual achievement names, descriptions, categories, or uncompleted progress. This page tracks the total and its changes only.',section);
+   if(account.uid)refreshPublicAchievementCount(account,status,false).then(()=>{if(genshinView==='achievements')showGenshinView('achievements')});
   }else if(view==='wishes'){
    addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nWish History\nWish history is not connected yet. UIGF import support can be added separately.\n\nPity\nPity counts and guarantee status will appear here after wish history is imported.');
   }
