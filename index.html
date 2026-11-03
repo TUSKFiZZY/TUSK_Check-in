@@ -369,7 +369,7 @@ function render(){
   const hs=document.createElement('div');hs.className='hoyo-status';hs.textContent=(linkedGenshin?linkedGenshin.lastConnected:account.hoyoUpdated)?'Last refresh: '+new Date(linkedGenshin?linkedGenshin.lastConnected:account.hoyoUpdated).toLocaleString():'Connect HoYoLAB, then refresh your status.';hoyo.append(hs);
   const homeDailyNote=linkedGenshin?linkedGenshin.dailyNote:account.hoyoData;
   if(homeDailyNote){
-   const hd=homeDailyNote,details=document.createElement('div');details.className='hoyo-data';
+   const hd=homeDailyNote,details=document.createElement('div');details.className='hoyo-data';const noteTitle=document.createElement('div');noteTitle.className='smallcap';noteTitle.textContent='LIVE DAILY NOTE';noteTitle.style.gridColumn='1 / -1';details.append(noteTitle);
    const stat=(value,label)=>{const item=document.createElement('div');item.className='hoyo-stat';const strong=document.createElement('strong');strong.textContent=value;const caption=document.createElement('span');caption.textContent=label;item.append(strong,caption);details.append(item)};
    stat(hd.resin+'/'+hd.maxResin,'Original Resin');
    stat(hd.commissions+'/'+hd.totalCommissions,'Daily Commissions');
