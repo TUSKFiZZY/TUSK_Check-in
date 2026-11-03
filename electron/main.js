@@ -63,7 +63,7 @@ ipcMain.handle("hoyo:daily-note", async (event, args) => {
   const t = Math.floor(Date.now() / 1000);
   const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const r = Array.from(crypto.randomBytes(6), byte => alphabet[byte % alphabet.length]).join("");
-  const salt = "6cqshh5dhw73bzxn20oexa9k516chk7s";
+  const salt = "6s25p5ox5y14umn1p61aqyyvbvvl3lrt";
   const ds = t + "," + r + "," + crypto.createHash("md5")
     .update("salt=" + salt + "&t=" + t + "&r=" + r).digest("hex");
   const url = new URL(DAILY_NOTE_URL);
@@ -83,10 +83,11 @@ ipcMain.handle("hoyo:daily-note", async (event, args) => {
       "Accept": "application/json"
     }
   });
-  if (!response.ok) throw new Error("HoYoLAB request failed (" + response.status + "). Please sign in again.");
+  if (!response.ok) throw new Error("HoYoLAB request failed (" + response.status + "). Check your connection and sign-in, then try again.");
+  
   const result = await response.json();
   if (result.retcode !== 0 || !result.data) {
-    throw new Error(result.message || "HoYoLAB did not return Daily Note data. Check the UID, server, and account login.");
+    throw new Error(result.message || "HoYoLAB did not return Daily Note data. Check the UID, server, account login, and enable Real-Time Notes in HoYoLAB Battle Chronicle settings.");
   }
   const d = result.data;
   return {
