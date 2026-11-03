@@ -190,7 +190,7 @@ async function refreshGenshinAccount(accountItem,statusEl){
     const stats=addText('div','hoyo-data','');
     [[account.dailyNote.resin+'/'+account.dailyNote.maxResin,'Resin'],[account.dailyNote.commissions+'/'+account.dailyNote.totalCommissions,'Commissions'],[account.dailyNote.expeditions+'/'+account.dailyNote.maxExpeditions,'Expeditions'],[account.dailyNote.extraRewardClaimed?'Claimed':'Not claimed','Commission bonus']].forEach(([value,label])=>{const item=addText('div','hoyo-stat','',stats);addText('strong','',value,item);addText('span','',label,item)});
    }
-   const status=addText('div','genshin-note','','');
+   const status=addText('div','genshin-note','');
    const actions=addText('div','genshin-actions','');
    const connect=document.createElement('button');connect.className='btn';connect.textContent='Connect HoYoLAB';connect.onclick=()=>openGenshinLogin(account,status);actions.append(connect);
    const refresh=document.createElement('button');refresh.className='btn primary';refresh.textContent='Refresh Genshin data';refresh.disabled=!account.uid;refresh.onclick=()=>refreshGenshinAccount(account,status);actions.append(refresh);
