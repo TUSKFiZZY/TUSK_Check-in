@@ -120,17 +120,12 @@ function renderMonth(){
   cell.className='month-day'+(dateKey===key(selected)?' selected':'')+(dateKey===key(today())?' today':'')+(isFuture?' future':dayComplete?' completed':' incomplete');
   const num=document.createElement('div');num.className='month-num';num.textContent=day;cell.append(num);
   if(!isFuture){const status=document.createElement('span');status.className='month-status';status.textContent=dayComplete?'✓':'✕';status.setAttribute('aria-label',dayComplete?'Completed':'Incomplete');cell.append(status)}
-  accounts.forEach(account=>{
-   const values=Array.isArray(saved[account.id])?saved[account.id]:[false,false,false];
-   const line=document.createElement('div');line.className='month-progress';
-   const shortName=account.name.length>9?account.name.slice(0,8)+'…':account.name;
-   line.textContent=shortName+' '+values.filter(Boolean).length+'/3';cell.append(line);
-  });
+
   if(!isFuture)cell.onclick=()=>{selected=date;showMonth=false;render()};
   grid.append(cell);
  }
  panel.append(grid);
- const legend=document.createElement('div');legend.className='month-legend';legend.textContent='Green ✓ = all tasks completed for every account. Red ✕ = incomplete. Future dates are locked until they begin.';panel.append(legend);
+
 }
 function render(){
  const k=key(selected),d=current(),todayKey=key(today());
