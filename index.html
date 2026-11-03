@@ -78,7 +78,6 @@ header{text-align:center;padding:10px 0 20px}body.genshin-active .date,body.gens
 </section>
 <section class="month-view" id="monthView" hidden></section>
 <div id="accounts"></div>
-<button class="btn add-account" id="addAccount">＋ Add account</button>
 <button class="btn" id="addGenshinHome" type="button">＋ Add Genshin Account</button>
 <dialog class="profile-dialog" id="profileDialog">
  <form id="profileForm">
@@ -296,7 +295,7 @@ function render(){
  document.getElementById('next').disabled=k>=todayKey;
  const host=document.getElementById('accounts');host.replaceChildren();
  let completed=0,total=accounts.length*tasks.length;
- if(!accounts.length){const empty=document.createElement('div');empty.className='empty-accounts';empty.textContent='No accounts added yet. Select “Add account” to create your first profile.';host.append(empty)}
+ if(!accounts.length){const empty=document.createElement('div');empty.className='empty-accounts';empty.textContent='No daily tracker accounts added yet.';host.append(empty)}
  accounts.forEach((account,index)=>{
   const section=document.createElement('section');section.className='account';
   const top=document.createElement('div');top.className='accounttop';
