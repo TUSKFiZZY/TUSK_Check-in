@@ -13,7 +13,7 @@
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#33224e 0%,var(--bg) 58%);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
 main{width:min(620px,100%);margin:auto;padding:24px 16px 40px}
 header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacing:.22em;color:var(--accent);font-weight:800}.date{font-size:clamp(22px,6vw,30px);font-weight:800;margin:10px 0 4px}.sub{font-size:12px;color:var(--muted)}
-.nav{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:15px}.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:9px 14px;border-radius:11px;font:inherit;font-size:13px;cursor:pointer}.btn:disabled{opacity:.35;cursor:default}
+.nav{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:15px}.month-toggle{margin-top:12px}.month-view{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:15px;margin:13px 0}.month-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.month-title{font-weight:800}.month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.month-weekday{text-align:center;color:var(--muted);font-size:10px;padding:5px 0}.month-day{min-width:0;min-height:72px;padding:6px 4px;border:1px solid var(--line);border-radius:9px;background:#171421;color:var(--text);text-align:left;cursor:pointer}.month-day.selected{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.month-day.today{background:#29213a}.month-day.empty{visibility:hidden}.month-num{font-size:12px;font-weight:800;margin-bottom:4px}.month-progress{font-size:9px;color:var(--muted);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.month-legend{font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5}.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:9px 14px;border-radius:11px;font:inherit;font-size:13px;cursor:pointer}.btn:disabled{opacity:.35;cursor:default}
 .summary,.account{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:17px;margin:13px 0}
 .summarytop,.accounttop{display:flex;align-items:center;justify-content:space-between;gap:12px}.smallcap{font-size:10px;letter-spacing:.15em;color:var(--muted);font-weight:800}.total{font-size:27px;font-weight:850}.count{font-size:12px;color:var(--muted)}
 .bar{height:6px;border-radius:9px;background:#39334b;overflow:hidden;margin-top:13px}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent2),#d1aaff);border-radius:9px;transition:width .2s}
@@ -40,7 +40,7 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
  <div class="summarytop"><div><div class="smallcap">OVERALL PROGRESS</div><div class="count" id="overallcount">0 of 6 completed</div></div><div class="total" id="percent">0%</div></div>
  <div class="bar"><div class="fill" id="overallbar"></div></div>
 </section>
-<div id="accounts"></div>
+<section class="month-view" id="monthView" hidden></section>\n<div id="accounts"></div>
 <button class="btn add-account" id="addAccount">＋ Add another account</button>
 <div class="footer"><span id="saved">Saved on this device</span><button class="btn danger" id="reset">Reset this day ↺</button></div>
 </main>
@@ -48,7 +48,7 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
 (()=>{
 const tasks=['Login','Commission','Resin'];
 const accountsKey='tuskfizzy_accounts_v1',recordsKey='tuskfizzy_daily_multi_v1',legacyKey='tuskfizzy_daily_v1';
-let selected=new Date();selected.setHours(12,0,0,0);
+let selected=new Date();selected.setHours(12,0,0,0);\nlet monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);\nlet showMonth=false;
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const today=()=>{let d=new Date();d.setHours(12,0,0,0);return d};
@@ -156,7 +156,7 @@ document.getElementById('addAccount').onclick=()=>{
 };
 document.getElementById('prev').onclick=()=>{selected.setDate(selected.getDate()-1);render()};
 document.getElementById('next').onclick=()=>{if(key(selected)<key(today())){selected.setDate(selected.getDate()+1);render()}};
-document.getElementById('today').onclick=()=>{selected=today();render()};
+document.getElementById('today').onclick=()=>{selected=today();monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);showMonth=false;render()};\ndocument.getElementById('monthToggle').onclick=()=>{showMonth=!showMonth;monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);render()};
 document.getElementById('reset').onclick=()=>{if(confirm('Reset all account checkboxes for '+key(selected)+'?')){delete records[key(selected)];saveAll();render()}};
 render();
 setInterval(()=>{if(key(selected)===key(today()))render()},30000);
