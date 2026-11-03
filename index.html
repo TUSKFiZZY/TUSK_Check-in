@@ -12,7 +12,7 @@
 :root{color-scheme:dark;--bg:#100e18;--panel:#1b1826;--panel2:#211d30;--line:#39334c;--text:#f5f1ff;--muted:#aaa2bd;--accent:#b58cff;--accent2:#8d61e8}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#33224e 0%,var(--bg) 58%);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
 main{width:min(620px,100%);margin:auto;padding:24px 16px 40px}
-header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacing:.22em;color:var(--accent);font-weight:800}.home-app-icon{display:block;width:68px;height:68px;object-fit:cover;object-position:center;margin:10px auto 4px;border-radius: 12px}.date{font-size:clamp(22px,6vw,30px);font-weight:800;margin:10px 0 4px}.sub{font-size:12px;color:var(--muted)}
+header{text-align:center;padding:10px 0 20px}header{position:relative}.more-menu-wrap{position:absolute;right:0;top:2px;z-index:20}.more-btn{width:38px;height:38px;padding:0;font-size:23px;line-height:1;border-radius:12px}.more-menu{position:absolute;right:0;top:44px;width:220px;padding:7px;background:var(--panel2);border:1px solid var(--line);border-radius:13px;box-shadow:0 12px 35px #0009;text-align:left}.more-menu[hidden]{display:none}.more-menu button{display:block;width:100%;padding:11px 10px;border:0;border-radius:8px;background:transparent;color:var(--text);text-align:left;font:inherit;font-size:13px;cursor:pointer}.more-menu button:hover{background:#ffffff12}.genshin-panel{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:17px;margin:13px 0}.genshin-panel[hidden]{display:none}.genshin-panel h2{font-size:18px;margin:0 0 8px}.genshin-panel p{font-size:12px;color:var(--muted);line-height:1.55}.genshin-panel label{display:block;color:var(--muted);font-size:11px;margin:10px 0 5px}.genshin-panel input,.genshin-panel select{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#171421;color:var(--text);font:inherit;font-size:13px}.genshin-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.genshin-account-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}.genshin-account-row:last-child{border-bottom:0}.genshin-account-row strong{font-size:13px}.genshin-account-row small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.genshin-note{padding:12px;border:1px dashed var(--line);border-radius:11px;color:var(--muted);font-size:12px;line-height:1.55;margin-top:12px}.brand{font-size:12px;letter-spacing:.22em;color:var(--accent);font-weight:800}.home-app-icon{display:block;width:68px;height:68px;object-fit:cover;object-position:center;margin:10px auto 4px;border-radius: 12px}.date{font-size:clamp(22px,6vw,30px);font-weight:800;margin:10px 0 4px}.sub{font-size:12px;color:var(--muted)}
 .nav{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:15px}.month-toggle{margin-top:12px}.month-view{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:15px;margin:13px 0}.month-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.month-title{font-weight:800}.month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.month-weekday{text-align:center;color:var(--muted);font-size:10px;padding:5px 0}.month-day{position:relative;min-width:0;min-height:72px;padding:6px 4px;border:1px solid var(--line);border-radius:9px;background:#171421;color:var(--text);text-align:left;cursor:pointer}.month-day.selected{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.month-day.today{box-shadow:inset 0 0 0 1px var(--accent)}.month-day.completed{background:#173326;border-color:#28734b}.month-day.incomplete{background:#3a2028;border-color:#8b3d4b}.month-day.future{background:#171421;color:#777184;opacity:.55;cursor:not-allowed}.month-day.empty{visibility:hidden}.month-day .month-num{display:block;width:100%;font-size:14px;font-weight:900;text-align:center;margin:2px 0 5px;line-height:1.25}.month-status{position:absolute;right:5px;top:4px;font-size:13px;font-weight:900;line-height:1}.month-day.completed .month-status{color:#69e39a}.month-day.incomplete .month-status{color:#ff8292}.month-progress{font-size:9px;color:var(--muted);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.month-day.future .month-progress{color:#777184}.month-legend{font-size:10px;color:var(--muted);margin-top:10px;line-height:1.5}.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:9px 14px;border-radius:11px;font:inherit;font-size:13px;cursor:pointer}.btn:disabled{opacity:.35;cursor:default}
 .summary,.account{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px;padding:17px;margin:13px 0}
 .summarytop,.accounttop{display:flex;align-items:center;justify-content:space-between;gap:12px}.smallcap{font-size:10px;letter-spacing:.15em;color:var(--muted);font-weight:800}.total{font-size:27px;font-weight:850}.count{font-size:12px;color:var(--muted)}
@@ -26,6 +26,15 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
 <body>
 <main>
 <header>
+ <div class="more-menu-wrap">
+  <button class="btn more-btn" id="moreMenuButton" aria-label="More options" aria-haspopup="true" aria-expanded="false">⋮</button>
+  <div class="more-menu" id="moreMenu" hidden>
+   <button type="button" data-gview="profile">Genshin Profile</button>
+   <button type="button" data-gview="achievements">Achievements</button>
+   <button type="button" data-gview="wishes">Wish History &amp; Pity</button>
+   <button type="button" data-gview="accounts">Manage Genshin Accounts</button>
+  </div>
+ </div>
  <div class="brand">TUSKFiZZY</div>
  <img class="home-app-icon" src="https://b2287888.assetcdn.net/2.0/2287888/wp-content/uploads/2025/04/abstract-blue-purple-wallpaper.jpg?lossy=1&strip=1&webp=1" alt="TUSKFiZZY square icon">
  <div class="date" id="date">Loading date…</div>
@@ -37,6 +46,10 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
  </div>
  <button class="btn month-toggle" id="monthToggle">Month overview</button>
 </header>
+<section class="genshin-panel" id="genshinPanel" hidden>
+ <div class="summarytop"><div><div class="smallcap">GENSHIN IMPACT</div><h2 id="genshinTitle">Genshin Profile</h2></div><button class="btn" id="closeGenshinPanel" type="button" aria-label="Close">✕</button></div>
+ <div id="genshinPanelBody"></div>
+</section>
 <button class="btn install" id="install">Install app</button>
 <section class="summary">
  <div class="summarytop"><div><div class="smallcap">OVERALL PROGRESS</div><div class="count" id="overallcount">0 of 6 completed</div></div><div class="total" id="percent">0%</div></div>
@@ -61,6 +74,38 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
 </main>
 <script>
 (()=>{
+const genshinAccountsKey='tuskfizzy_genshin_accounts_v1',genshinSelectedKey='tuskfizzy_selected_genshin_v1';
+let genshinAccounts=[],selectedGenshinId=localStorage.getItem(genshinSelectedKey)||'',genshinView='profile';
+try{genshinAccounts=JSON.parse(localStorage.getItem(genshinAccountsKey)||'[]')||[]}catch(e){}
+function saveGenshinAccounts(){localStorage.setItem(genshinAccountsKey,JSON.stringify(genshinAccounts));if(selectedGenshinId)localStorage.setItem(genshinSelectedKey,selectedGenshinId);else localStorage.removeItem(genshinSelectedKey)}
+function selectedGenshin(){return genshinAccounts.find(a=>a.id===selectedGenshinId)||null}
+function showGenshinView(view){
+ genshinView=view;document.getElementById('moreMenu').hidden=true;document.getElementById('moreMenuButton').setAttribute('aria-expanded','false');
+ const panel=document.getElementById('genshinPanel'),body=document.getElementById('genshinPanelBody'),title=document.getElementById('genshinTitle');panel.hidden=false;body.replaceChildren();
+ const account=selectedGenshin();
+ const addText=(tag,cls,txt,parent=body)=>{const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=txt;parent.append(el);return el};
+ if(view==='accounts'){
+  title.textContent='Manage Genshin Accounts';
+  addText('p','','These profiles are global and separate from your daily checklist accounts.');
+  const add=document.createElement('button');add.className='btn primary';add.textContent='＋ Add Genshin account';add.onclick=()=>{const name=prompt('Enter a name for this Genshin account:');if(!name||!name.trim())return;const uid=prompt('Enter the Genshin UID (you can edit it later):')||'';const id='genshin_'+Date.now().toString(36);genshinAccounts.push({id,name:name.trim(),uid:uid.trim(),server:'os_asia'});selectedGenshinId=id;saveGenshinAccounts();showGenshinView('accounts')};body.append(add);
+  if(!genshinAccounts.length)addText('div','genshin-note','No Genshin accounts added yet. Add one to get started.');
+  genshinAccounts.forEach(a=>{const row=addText('div','genshin-account-row','');const info=addText('div','','',row);addText('strong','',a.name,info);addText('small','',(a.uid?'UID '+a.uid+' · ':'')+(a.server||'Asia'),info);const controls=addText('div','genshin-actions','',row);const choose=document.createElement('button');choose.className='btn';choose.textContent=a.id===selectedGenshinId?'Selected':'Switch';choose.onclick=()=>{selectedGenshinId=a.id;saveGenshinAccounts();showGenshinView('accounts')};controls.append(choose);const edit=document.createElement('button');edit.className='btn';edit.textContent='Edit';edit.onclick=()=>{const name=prompt('Account name:',a.name);if(name&&name.trim())a.name=name.trim();const uid=prompt('Genshin UID:',a.uid||'');if(uid!==null)a.uid=uid.trim();const server=prompt('Server: Asia, America, Europe, or TW/HK/MO',a.server||'os_asia');if(server)a.server=server;saveGenshinAccounts();showGenshinView('accounts')};controls.append(edit);const remove=document.createElement('button');remove.className='btn danger';remove.textContent='Remove';remove.onclick=()=>{if(confirm('Remove '+a.name+' from Genshin accounts?')){genshinAccounts=genshinAccounts.filter(x=>x.id!==a.id);if(selectedGenshinId===a.id)selectedGenshinId=genshinAccounts[0]?.id||'';saveGenshinAccounts();showGenshinView('accounts')}};controls.append(remove)});
+  return;
+ }
+ if(!account){title.textContent=view==='achievements'?'Achievements':view==='wishes'?'Wish History & Pity':'Genshin Profile';addText('div','genshin-note','Add a Genshin account first using ⋮ → Manage Genshin Accounts.');const manage=document.createElement('button');manage.className='btn';manage.textContent='Manage Genshin Accounts';manage.onclick=()=>showGenshinView('accounts');body.append(manage);return}
+ if(view==='profile'){
+  title.textContent='Genshin Profile';addText('p','','Selected Genshin account details.');addText('div','genshin-note','Account: '+account.name+'\nUID: '+(account.uid||'Not added')+'\nServer: '+(account.server||'Asia')+'\n\nLive profile details (Adventure Rank, characters, exploration and Spiral Abyss) are not connected yet.');
+ }else if(view==='achievements'){
+  title.textContent='Achievements';addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nAchievement totals and unlocked/locked lists are not connected yet. No achievement data is being fabricated.');
+ }else if(view==='wishes'){
+  title.textContent='Wish History & Pity';addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nWish history and pity are not connected yet. Import support for UIGF wish-history files can be added separately.');
+ }
+ const switcher=document.createElement('div');switcher.className='genshin-actions';const change=document.createElement('button');change.className='btn';change.textContent='Switch Genshin account';change.onclick=()=>showGenshinView('accounts');switcher.append(change);body.append(switcher);
+}
+document.getElementById('moreMenuButton').addEventListener('click',()=>{const menu=document.getElementById('moreMenu');menu.hidden=!menu.hidden;document.getElementById('moreMenuButton').setAttribute('aria-expanded',String(!menu.hidden))});
+document.querySelectorAll('[data-gview]').forEach(button=>button.addEventListener('click',()=>showGenshinView(button.dataset.gview)));
+document.getElementById('closeGenshinPanel').onclick=()=>document.getElementById('genshinPanel').hidden=true;
+document.addEventListener('click',e=>{const wrap=document.querySelector('.more-menu-wrap');if(wrap&&!wrap.contains(e.target)){document.getElementById('moreMenu').hidden=true;document.getElementById('moreMenuButton').setAttribute('aria-expanded','false')}});
 const tasks=['Login','Commission','Resin'];
 const accountsKey='tuskfizzy_accounts_v1',recordsKey='tuskfizzy_daily_multi_v1',legacyKey='tuskfizzy_daily_v1';
 let selected=new Date();selected.setHours(12,0,0,0);
