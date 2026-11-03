@@ -283,7 +283,7 @@ Object.values(records).forEach(day=>{if(day&&typeof day==='object')oldDefaultIds
 if(hadOldDefaults){try{localStorage.setItem(accountsKey,JSON.stringify(accounts));localStorage.setItem(recordsKey,JSON.stringify(records));localStorage.removeItem(legacyKey)}catch(e){}}
 
 function saveAll(){try{localStorage.setItem(accountsKey,JSON.stringify(accounts));localStorage.setItem(recordsKey,JSON.stringify(records));document.getElementById('saved').textContent='✓ Saved on this device'}catch(e){document.getElementById('saved').textContent='Could not save — storage unavailable'}}
-function homeAccounts(){const combined=accounts.slice();genshinAccounts.forEach(g=>{if(!combined.some(a=>a.id===g.id))combined.push({id:g.id,name:g.name,portrait:'',uid:g.uid||'',server:g.server||'os_asia',isGenshin:true})});return combined}
+function homeAccounts(){const combined=accounts.map(a=>({...a}));const sameUid=(a,b)=>String(a.uid||'').trim()&&String(b.uid||'').trim()&&String(a.uid).trim()===String(b.uid).trim();genshinAccounts.forEach(g=>{const existing=combined.find(a=>a.id===g.id||sameUid(a,g));if(existing){existing.isGenshin=true;existing.genshinId=g.id;existing.uid=existing.uid||g.uid||'';existing.server=existing.server||g.server||'os_asia';existing.dailyNote=g.dailyNote||existing.hoyoData||null;existing.lastConnected=g.lastConnected||existing.hoyoUpdated||null}else combined.push({id:g.id,name:g.name,portrait:'',uid:g.uid||'',server:g.server||'os_asia',isGenshin:true,dailyNote:g.dailyNote||null,lastConnected:g.lastConnected||null,genshinId:g.id})});return combined}
 const fresh=()=>Object.fromEntries(homeAccounts().map(a=>[a.id,[false,false,false]]));
 function current(){let r=records[key(selected)];if(!r){r=fresh();}homeAccounts().forEach(a=>{if(!Array.isArray(r[a.id]))r[a.id]=[false,false,false]});return r}
 function makePortrait(src,name){
@@ -333,7 +333,7 @@ function render(){
  const visibleAccounts=homeAccounts();let completed=0,total=visibleAccounts.length*tasks.length;
  if(!visibleAccounts.length){const empty=document.createElement('div');empty.className='empty-accounts';empty.textContent='No Genshin accounts added yet. Use Add Genshin Account to get started.';host.append(empty)}
  visibleAccounts.forEach((account,index)=>{
-  const linkedGenshin=account.isGenshin?genshinAccounts.find(g=>g.id===account.id):null;
+  const linkedGenshin=account.isGenshin?genshinAccounts.find(g=>g.id===(account.genshinId||account.id)||(account.uid&&g.uid&&String(g.uid).trim()===String(account.uid).trim())):null;
   const section=document.createElement('section');section.className='account';
   const top=document.createElement('div');top.className='accounttop';
   const identity=document.createElement('div');identity.className='identity';
