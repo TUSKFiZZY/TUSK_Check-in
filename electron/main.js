@@ -52,7 +52,7 @@ function makeDS() {
 }
 ipcMain.handle("enka:profile",async(event,uid)=>{
  if(!isTracker(event))throw new Error("Untrusted tracker page.");
- if(!/^\d{9}$/.test(String(uid||"")))throw new Error("Enter a valid 9-digit Genshin UID.");
+ if(!/^\d{9,10}$/.test(String(uid||"")))throw new Error("Enter a valid 9- or 10-digit Genshin UID.");
  const cached=ENKA_CACHE.get(uid);if(cached&&cached.expiresAt>Date.now())return {...cached.data,cached:true};
  let response;
  try {
