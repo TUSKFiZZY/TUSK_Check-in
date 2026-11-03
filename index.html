@@ -32,8 +32,7 @@ header{text-align:center;padding:10px 0 20px}body.genshin-active .date,body.gens
    <button type="button" data-gview="home">Home</button>
    <button type="button" data-gview="profile">Genshin Profile</button>
    <button type="button" data-gview="achievements">Achievements</button>
-   <button type="button" data-gview="wishes">Wish History</button>
-   <button type="button" data-gview="pity">Pity</button>
+   <button type="button" data-gview="wishes">Wish History &amp; Pity</button>
    <button type="button" data-gview="accounts">Manage Genshin Accounts</button>
   </div>
  </div>
@@ -117,7 +116,7 @@ function showGenshinView(view){
   });
   return;
  }
- title.textContent=view==='achievements'?'Achievements':view==='wishes'?'Wish History':view==='pity'?'Pity':'Genshin Profile';
+ title.textContent=view==='achievements'?'Achievements':view==='wishes'?'Wish History & Pity':'Genshin Profile';
  if(!account){addText('div','genshin-note','Add a Genshin account first to view this section.');manageButton();return}
  if(view==='profile'){
   addText('p','','Selected Genshin account: '+account.name);
@@ -125,9 +124,7 @@ function showGenshinView(view){
  }else if(view==='achievements'){
   addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nAchievement data is not connected yet.');
  }else if(view==='wishes'){
-  addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nWish history is not connected yet. UIGF import support can be added separately.');
- }else if(view==='pity'){
-  addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nPity counts will appear after wish history is imported.');
+  addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nWish History\nWish history is not connected yet. UIGF import support can be added separately.\n\nPity\nPity counts and guarantee status will appear here after wish history is imported.');
  }
  const actions=addText('div','genshin-actions','');
  const switcher=document.createElement('button');switcher.className='btn';switcher.textContent='Switch Genshin Account';switcher.onclick=()=>showGenshinView('accounts');actions.append(switcher);
