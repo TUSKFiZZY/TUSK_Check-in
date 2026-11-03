@@ -1,0 +1,35 @@
+name: Build Windows installer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'electron/**'
+      - 'package.json'
+      - '.github/workflows/build-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Build installer
+        run: npm run dist
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: TUSKFiZZY-Windows-Installer
+          path: dist/*.exe
+          if-no-files-found: error
+          retention-days: 30
