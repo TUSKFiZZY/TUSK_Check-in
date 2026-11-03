@@ -82,9 +82,127 @@ let genshinAccounts=[],selectedGenshinId=localStorage.getItem(genshinSelectedKey
 try{genshinAccounts=JSON.parse(localStorage.getItem(genshinAccountsKey)||'[]')||[]}catch(e){}
 function saveGenshinAccounts(){localStorage.setItem(genshinAccountsKey,JSON.stringify(genshinAccounts));if(selectedGenshinId)localStorage.setItem(genshinSelectedKey,selectedGenshinId);else localStorage.removeItem(genshinSelectedKey)}
 function selectedGenshin(){return genshinAccounts.find(a=>a.id===selectedGenshinId)||null}
-function showGenshinView(view){
- genshinView=view;
- document.getElementById('moreMenu').hidden=true;
+async function refreshGenshinAccount(accountItem,statusEl){
+  if(!accountItem.uid){statusEl.textContent='Add this account UID first.';return}
+  if(!window.tuskfizzy||typeof window.tuskfizzy.getDailyNote!=='function'){
+   statusEl.textContent='Genshin connection is available in the TUSKFiZZY Windows desktop app. Open the app to connect.';
+   return;
+  }
+  statusEl.textContent='Checking HoYoLAB connection…';
+  try{
+   const data=await window.tuskfizzy.getDailyNote(accountItem.id,accountItem.uid,accountItem.server||'os_asia');
+   accountItem.dailyNote=data;
+   accountItem.lastConnected=Date.now();
+   saveGenshinAccounts();
+   statusEl.textContent='Connected · live data refreshed';
+   showGenshinView(genshinView);
+  }catch(error){
+   statusEl.textContent=error&&error.message?error.message:'Could not connect. Sign in to HoYoLAB and try again.';
+  }
+ }
+ async function openGenshinLogin(accountItem,statusEl){
+  if(!window.tuskfizzy||typeof window.tuskfizzy.connectHoYoLab!=='function'){
+   statusEl.textContent='Open the TUSKFiZZY Windows desktop app to connect this account.';
+   return;
+  }
+  try{
+   await window.tuskfizzy.connectHoYoLab(accountItem.id);
+   statusEl.textContent='HoYoLAB opened in a separate window. Sign in there, then return and press Refresh.';
+  }catch(error){statusEl.textContent=error&&error.message?error.message:'Could not open HoYoLAB.'}
+ }
+ function showGenshinView(view){
+  genshinView=view;
+  document.getElementById('moreMenu').hidden=true;
+  document.getElementById('moreMenuButton').setAttribute('aria-expanded','false');
+  const panel=document.getElementById('genshinPanel'),body=document.getElementById('genshinPanelBody'),title=document.getElementById('genshinTitle');
+  const home=view==='home';
+  document.body.classList.toggle('genshin-active',!home);
+  panel.hidden=home;
+  if(home)return;
+  body.replaceChildren();
+  const account=selectedGenshin();
+  const addText=(tag,cls,txt,parent=body)=>{const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=txt;parent.append(el);return el};
+  const manageButton=()=>{const button=document.createElement('button');button.className='btn';button.type='button';button.textContent='Manage Genshin Accounts';button.onclick=()=>showGenshinView('accounts');body.append(button)};
+  if(view==='accounts'){
+   title.textContent='Manage Genshin Accounts';
+   addText('p','','Add your Genshin UID, then sign in to HoYoLAB using the separate desktop window.');
+   const add=document.createElement('button');add.className='btn primary';add.textContent='＋ Add Genshin account';
+   add.onclick=()=>renderGenshinForm();
+   body.append(add);
+   if(!genshinAccounts.length)addText('div','genshin-note','No Genshin accounts added yet.');
+   function renderGenshinForm(existing=null){
+    const old=body.querySelector('.genshin-form');if(old)old.remove();
+    const form=addText('form','genshin-panel genshin-form','');
+    addText('h2','',existing?'Edit Genshin account':'Add Genshin account',form);
+    const makeField=(labelText,type,value,placeholder)=>{
+     const label=addText('label','',labelText,form);
+     const input=document.createElement('input');input.type=type;input.value=value||'';input.placeholder=placeholder||'';label.append(input);return input;
+    };
+    const name=makeField('Account name','text',existing?.name||'','e.g. Main account');name.required=true;name.maxLength=40;
+    const uid=makeField('Genshin UID','text',existing?.uid||'','Enter your 9-digit UID');uid.inputMode='numeric';uid.maxLength=10;
+    const serverLabel=addText('label','','Server',form);
+    const server=document.createElement('select');
+    [['os_asia','Asia'],['os_usa','America'],['os_euro','Europe'],['os_cht','TW, HK, MO']].forEach(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;server.append(option)});
+    server.value=existing?.server||'os_asia';serverLabel.append(server);
+    const actions=addText('div','genshin-actions','',form);
+    const save=document.createElement('button');save.type='submit';save.className='btn primary';save.textContent='Save account';actions.append(save);
+    const cancel=document.createElement('button');cancel.type='button';cancel.className='btn';cancel.textContent='Cancel';cancel.onclick=()=>form.remove();actions.append(cancel);
+    form.onsubmit=e=>{
+     e.preventDefault();
+     const cleanName=name.value.trim(),cleanUid=uid.value.trim();
+     if(!cleanName)return;
+     if(cleanUid&&!/^\\d{8,10}$/.test(cleanUid)){uid.setCustomValidity('Enter a valid Genshin UID.');uid.reportValidity();return}
+     uid.setCustomValidity('');
+     if(existing){existing.name=cleanName;existing.uid=cleanUid;existing.server=server.value}
+     else{
+      const id='genshin_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
+      genshinAccounts.push({id,name:cleanName,uid:cleanUid,server:server.value});
+      selectedGenshinId=id;
+     }
+     saveGenshinAccounts();showGenshinView('accounts');
+    };
+   }
+   genshinAccounts.forEach(accountItem=>{
+    const row=addText('div','genshin-account-row',''),info=addText('div','','',row);
+    addText('strong','',accountItem.name,info);
+    addText('small','',(accountItem.uid?'UID '+accountItem.uid+' · ':'UID not set · ')+(accountItem.server||'os_asia')+(accountItem.lastConnected?' · Connected before':''),info);
+    const controls=addText('div','genshin-actions','',row);
+    const choose=document.createElement('button');choose.className='btn';choose.textContent=accountItem.id===selectedGenshinId?'Selected':'Switch';
+    choose.onclick=()=>{selectedGenshinId=accountItem.id;saveGenshinAccounts();showGenshinView('accounts')};controls.append(choose);
+    const connect=document.createElement('button');connect.className='btn';connect.textContent='Connect HoYoLAB';
+    const status=addText('small','genshin-note','',info);
+    connect.onclick=()=>openGenshinLogin(accountItem,status);controls.append(connect);
+    const refresh=document.createElement('button');refresh.className='btn';refresh.textContent='Refresh';
+    refresh.disabled=!accountItem.uid;refresh.onclick=()=>refreshGenshinAccount(accountItem,status);controls.append(refresh);
+    const edit=document.createElement('button');edit.className='btn';edit.textContent='Edit';
+    edit.onclick=()=>renderGenshinForm(accountItem);controls.append(edit);
+    const remove=document.createElement('button');remove.className='btn danger';remove.textContent='Remove';
+    remove.onclick=()=>{if(confirm('Remove '+accountItem.name+' from Genshin accounts?')){genshinAccounts=genshinAccounts.filter(x=>x.id!==accountItem.id);if(selectedGenshinId===accountItem.id)selectedGenshinId=genshinAccounts[0]?.id||'';saveGenshinAccounts();showGenshinView('accounts')}};controls.append(remove);
+   });
+   return;
+  }
+  title.textContent=view==='achievements'?'Achievements':view==='wishes'?'Wish History & Pity':'Genshin Profile';
+  if(!account){addText('div','genshin-note','Add a Genshin account first to view this section.');manageButton();return}
+  if(view==='profile'){
+   addText('p','','Selected Genshin account: '+account.name);
+   addText('div','genshin-note','UID: '+(account.uid||'Not added')+'\\nServer: '+(account.server||'Asia')+'\\n\\n'+(account.dailyNote?'Live HoYoLAB data · updated '+new Date(account.dailyNote.fetchedAt).toLocaleString():'Not connected yet. Open HoYoLAB and sign in to connect.'));
+   if(account.dailyNote){
+    const stats=addText('div','hoyo-data','');
+    [[account.dailyNote.resin+'/'+account.dailyNote.maxResin,'Resin'],[account.dailyNote.commissions+'/'+account.dailyNote.totalCommissions,'Commissions'],[account.dailyNote.expeditions+'/'+account.dailyNote.maxExpeditions,'Expeditions'],[account.dailyNote.extraRewardClaimed?'Claimed':'Not claimed','Commission bonus']].forEach(([value,label])=>{const item=addText('div','hoyo-stat','',stats);addText('strong','',value,item);addText('span','',label,item)});
+   }
+   const status=addText('div','genshin-note','','');
+   const actions=addText('div','genshin-actions','');
+   const connect=document.createElement('button');connect.className='btn';connect.textContent='Connect HoYoLAB';connect.onclick=()=>openGenshinLogin(account,status);actions.append(connect);
+   const refresh=document.createElement('button');refresh.className='btn primary';refresh.textContent='Refresh Genshin data';refresh.disabled=!account.uid;refresh.onclick=()=>refreshGenshinAccount(account,status);actions.append(refresh);
+  }else if(view==='achievements'){
+   addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\\n\\nAchievement data is not connected yet.');
+  }else if(view==='wishes'){
+   addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\\n\\nWish History\\nWish history is not connected yet. UIGF import support can be added separately.\\n\\nPity\\nPity counts and guarantee status will appear here after wish history is imported.');
+  }
+  const actions=addText('div','genshin-actions','');
+  const switcher=document.createElement('button');switcher.className='btn';switcher.textContent='Switch Genshin Account';switcher.onclick=()=>showGenshinView('accounts');actions.append(switcher);
+  manageButton();
+ }
  document.getElementById('moreMenuButton').setAttribute('aria-expanded','false');
  const panel=document.getElementById('genshinPanel'),body=document.getElementById('genshinPanelBody'),title=document.getElementById('genshinTitle');
  const home=view==='home';
