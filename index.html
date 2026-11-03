@@ -21,7 +21,7 @@ header{text-align:center;padding:10px 0 20px}.brand{font-size:12px;letter-spacin
 .footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:17px 2px;color:var(--muted);font-size:11px}.danger{color:#ffb4c0}.install{display:none;width:100%;margin:0 0 12px;background:var(--accent2);border:0;font-weight:750}
 .accounttop{align-items:center}.identity{display:flex;align-items:center;gap:12px;min-width:0}.portrait{width:66px;height:66px;flex:0 0 66px;border-radius:15px;object-fit:cover;background:linear-gradient(145deg,#574078,#241d34);border:1px solid var(--line)}.portrait-fallback{display:grid;place-items:center;font-size:23px;font-weight:850;color:#e7d7ff}.accountmeta{min-width:0}.accountmeta h2{overflow-wrap:anywhere}.account-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px}.account-actions .btn{padding:6px 9px;font-size:11px}.add-account{width:100%;margin:5px 0 12px;border-style:dashed;color:var(--accent);font-weight:750;padding:13px}.empty-note{color:var(--muted);font-size:12px;margin:12px 2px 0}
 @media(min-width:560px){main{padding-top:34px}.summary,.account{padding:20px}}
-.hoyo-box{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#171421}.hoyo-box label{display:block;color:var(--muted);font-size:11px;margin:8px 0 4px}.hoyo-box input,.hoyo-box select{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--text);font:inherit;font-size:13px}.hoyo-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.hoyo-status{font-size:11px;color:var(--muted);margin-top:8px;white-space:pre-wrap}.hoyo-data{font-size:12px;color:var(--text);margin-top:10px;line-height:1.7}</style>
+.account-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:16px;align-items:start}.account-body .tasks{margin-top:0}.hoyo-box{padding:12px;border:1px solid var(--line);border-radius:12px;background:#171421;min-width:0}.hoyo-box label{display:block;color:var(--muted);font-size:11px;margin:8px 0 4px}.hoyo-box input,.hoyo-box select{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--text);font:inherit;font-size:13px}.hoyo-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.hoyo-actions .btn{padding:7px 9px;font-size:11px}.hoyo-status{font-size:11px;color:var(--muted);margin-top:8px;white-space:pre-wrap}.hoyo-data{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.hoyo-stat{padding:9px;border:1px solid var(--line);border-radius:9px;background:var(--panel);min-width:0}.hoyo-stat strong{display:block;font-size:17px;line-height:1.3}.hoyo-stat span{display:block;color:var(--muted);font-size:10px;margin-top:3px}.hoyo-empty{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5}@media(max-width:520px){.account-body{grid-template-columns:1fr}}</style>
 </head>
 <body>
 <main>
@@ -91,6 +91,7 @@ function render(){
   meta.append(cap,heading);identity.append(meta);
   const count=document.createElement('div');count.className='count';count.textContent=d[account.id].filter(Boolean).length+'/3';
   top.append(identity,count);section.append(top);
+  const body=document.createElement('div');body.className='account-body';
   const taskHost=document.createElement('div');taskHost.className='tasks';
   tasks.forEach((task,i)=>{
    const label=document.createElement('label');label.className='task'+(d[account.id][i]?' done':'');
@@ -98,11 +99,11 @@ function render(){
    input.addEventListener('change',()=>{if(!records[k])records[k]=fresh();records[k][account.id][i]=input.checked;saveAll();render()});
    const span=document.createElement('span');span.textContent=task;label.append(input,span);taskHost.append(label);
   });
-  section.append(taskHost);
+  body.append(taskHost);
   const n=d[account.id].filter(Boolean).length;completed+=n;
-  const bar=document.createElement('div');bar.className='bar';const fill=document.createElement('div');fill.className='fill';fill.style.width=(n/3*100)+'%';bar.append(fill);section.append(bar);
+  const bar=document.createElement('div');bar.className='bar';const fill=document.createElement('div');fill.className='fill';fill.style.width=(n/3*100)+'%';bar.append(fill);taskHost.append(bar);
   const hoyo=document.createElement('div');hoyo.className='hoyo-box';
-  const ht=document.createElement('div');ht.className='smallcap';ht.textContent='HOYOLAB CONNECTION';hoyo.append(ht);
+  const ht=document.createElement('div');ht.className='smallcap';ht.textContent='GENSHIN DAILY STATUS';hoyo.append(ht);
   const uidLabel=document.createElement('label');uidLabel.textContent='Genshin UID';hoyo.append(uidLabel);
   const uid=document.createElement('input');uid.inputMode='numeric';uid.placeholder='Enter this profile’s Genshin UID';uid.value=account.uid||'';uid.addEventListener('change',()=>{account.uid=uid.value.trim();saveAll()});hoyo.append(uid);
   const serverLabel=document.createElement('label');serverLabel.textContent='Genshin server';hoyo.append(serverLabel);
@@ -110,11 +111,19 @@ function render(){
   const ha=document.createElement('div');ha.className='hoyo-actions';
   const connect=document.createElement('button');connect.className='btn';connect.textContent='Connect HoYoLAB';connect.onclick=async()=>{try{if(!window.tuskfizzy)throw new Error('HoYoLAB connection is available in the Windows desktop app.');await window.tuskfizzy.connectHoYoLab(account.id);hs.textContent='Sign in to HoYoLAB in the window that opened. Your session is saved separately for this profile.'}catch(e){hs.textContent=e.message}};
   const checkin=document.createElement('button');checkin.className='btn';checkin.textContent='Daily check-in';checkin.onclick=async()=>{try{if(!window.tuskfizzy)throw new Error('Open this in the Windows desktop app.');await window.tuskfizzy.openHoYoLabCheckin(account.id)}catch(e){hs.textContent=e.message}};
-  const refresh=document.createElement('button');refresh.className='btn';refresh.textContent='Refresh Resin';refresh.onclick=async()=>{try{if(!window.tuskfizzy)throw new Error('Open this in the Windows desktop app.');if(!account.uid)throw new Error('Enter the Genshin UID for this profile first.');hs.textContent='Loading HoYoLAB data…';const data=await window.tuskfizzy.getDailyNote(account.id,account.uid,account.server||'os_asia');account.hoyoData=data;account.hoyoUpdated=Date.now();saveAll();render()}catch(e){hs.textContent=e.message}};
+  const refresh=document.createElement('button');refresh.className='btn';refresh.textContent='Refresh';refresh.onclick=async()=>{try{if(!window.tuskfizzy)throw new Error('Open this in the Windows desktop app.');if(!account.uid)throw new Error('Enter the Genshin UID for this profile first.');hs.textContent='Loading HoYoLAB data…';const data=await window.tuskfizzy.getDailyNote(account.id,account.uid,account.server||'os_asia');account.hoyoData=data;account.hoyoUpdated=Date.now();saveAll();render()}catch(e){hs.textContent=e.message}};
   ha.append(connect,checkin,refresh);hoyo.append(ha);
-  const hs=document.createElement('div');hs.className='hoyo-status';hs.textContent=account.hoyoUpdated?'Last successful refresh: '+new Date(account.hoyoUpdated).toLocaleString():'Not connected yet';hoyo.append(hs);
-  if(account.hoyoData){const hd=account.hoyoData;const details=document.createElement('div');details.className='hoyo-data';details.textContent='Original Resin: '+hd.resin+'/'+hd.maxResin+'  |  Daily Commissions: '+hd.commissions+'/'+hd.totalCommissions+'  |  Expeditions: '+hd.expeditions+'/'+hd.maxExpeditions;hoyo.append(details)}
-  section.append(hoyo);
+  const hs=document.createElement('div');hs.className='hoyo-status';hs.textContent=account.hoyoUpdated?'Last refresh: '+new Date(account.hoyoUpdated).toLocaleString():'Connect HoYoLAB, then refresh your status.';hoyo.append(hs);
+  if(account.hoyoData){
+   const hd=account.hoyoData,details=document.createElement('div');details.className='hoyo-data';
+   const stat=(value,label)=>{const item=document.createElement('div');item.className='hoyo-stat';const strong=document.createElement('strong');strong.textContent=value;const caption=document.createElement('span');caption.textContent=label;item.append(strong,caption);details.append(item)};
+   stat(hd.resin+'/'+hd.maxResin,'Original Resin');
+   stat(hd.commissions+'/'+hd.totalCommissions,'Daily Commissions');
+   stat(hd.expeditions+'/'+hd.maxExpeditions,'Expeditions');
+   stat(hd.extraRewardClaimed?'Claimed':'Not claimed','Commission bonus');
+   hoyo.append(details);
+  }else{const empty=document.createElement('div');empty.className='hoyo-empty';empty.textContent='Resin and commission progress will appear here after you connect HoYoLAB and press Refresh.';hoyo.append(empty)}
+  body.append(hoyo);section.append(body);
   const actions=document.createElement('div');actions.className='account-actions';
   const edit=document.createElement('button');edit.className='btn';edit.textContent='Edit profile';edit.onclick=()=>editAccount(account.id);
   actions.append(edit);
