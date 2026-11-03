@@ -154,6 +154,14 @@ async function refreshGenshinAccount(accountItem,statusEl){
   const ttl=Math.max(60,Number(accountItem.enkaProfile&&accountItem.enkaProfile.ttl)||300)*1000;
   const age=Date.now()-Number(accountItem.enkaProfile&&accountItem.enkaProfile.fetchedAt||0);
   if(!force&&accountItem.enkaProfile&&accountItem.enkaProfile.playerInfo&&age>=0&&age<ttl){
+   const cachedCount=Number(accountItem.enkaProfile.playerInfo.finishAchievementNum);
+   if(Number.isFinite(cachedCount)){
+    if(!Array.isArray(accountItem.achievementCountHistory))accountItem.achievementCountHistory=[];
+    const cachedHistory=accountItem.achievementCountHistory,last=cachedHistory[cachedHistory.length-1];
+    if(!last||Number(last.count)!==cachedCount)cachedHistory.push({count:cachedCount,at:Number(accountItem.enkaProfile.fetchedAt)||Date.now()});
+    accountItem.achievementCountHistory=cachedHistory.slice(-20);
+    saveGenshinAccounts();
+   }
    statusEl.textContent='Using Enka public profile cache · next refresh in about '+Math.ceil((ttl-age)/60000)+' min.';
    return;
   }
