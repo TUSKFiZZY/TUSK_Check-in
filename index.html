@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#171322">
-<meta name="description" content="Daily checklist for TUSKFiZZY accounts.">
+<meta name="description" content="Custom daily checklist tracker for TUSKFiZZY.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <title>TUSKFiZZY Daily Tracker</title>
@@ -69,24 +69,16 @@ let showMonth=false;
 const pad=n=>String(n).padStart(2,'0');
 const key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const today=()=>{let d=new Date();d.setHours(12,0,0,0);return d};
-const starter=[
- {id:'main',name:'Main TUSKFiZZY',portrait:'https://genshin-impact.fandom.com/wiki/Special:FilePath/Lohen_Portrait.png'},
- {id:'alt',name:'Alternate TUSKFiZZY',portrait:'https://genshin-impact.fandom.com/wiki/Special:FilePath/Tsaritsa_Portrait.png'}
-];
 let accounts=[],records={};
 try{accounts=JSON.parse(localStorage.getItem(accountsKey)||'null')||[]}catch(e){}
 try{records=JSON.parse(localStorage.getItem(recordsKey)||'{}')||{}}catch(e){}
-const hasSavedAccounts=localStorage.getItem(accountsKey)!==null;
-if(!hasSavedAccounts){
- let legacy={};try{legacy=JSON.parse(localStorage.getItem(legacyKey)||'{}')||{}}catch(e){}
- if(Object.keys(legacy).length){
-  accounts=starter.map(a=>({...a}));
-  Object.entries(legacy).forEach(([date,old])=>{
-   records[date]={main:Array.isArray(old.main)?old.main:[false,false,false],alt:Array.isArray(old.alt)?old.alt:[false,false,false]};
-  });
-  saveAll();
- }
-}
+// Remove the old built-in Main/Alternate profiles from existing installations.
+const oldDefaultIds=['main','alt'];
+const hadOldDefaults=accounts.some(a=>oldDefaultIds.includes(a.id))||Object.values(records).some(day=>day&&oldDefaultIds.some(id=>Object.prototype.hasOwnProperty.call(day,id)));
+accounts=accounts.filter(a=>!oldDefaultIds.includes(a.id));
+Object.values(records).forEach(day=>{if(day&&typeof day==='object')oldDefaultIds.forEach(id=>delete day[id])});
+if(hadOldDefaults){try{localStorage.removeItem(legacyKey)}catch(e){}}
+
 function saveAll(){try{localStorage.setItem(accountsKey,JSON.stringify(accounts));localStorage.setItem(recordsKey,JSON.stringify(records));document.getElementById('saved').textContent='✓ Saved on this device'}catch(e){document.getElementById('saved').textContent='Could not save — storage unavailable'}}
 const fresh=()=>Object.fromEntries(accounts.map(a=>[a.id,[false,false,false]]));
 function current(){let r=records[key(selected)];if(!r){r=fresh();}accounts.forEach(a=>{if(!Array.isArray(r[a.id]))r[a.id]=[false,false,false]});return r}
@@ -186,7 +178,7 @@ function render(){
   const upload=document.createElement('button');upload.className='btn';upload.textContent='Upload picture';
   upload.onclick=()=>{const picker=document.createElement('input');picker.type='file';picker.accept='image/*';picker.onchange=()=>{const file=picker.files&&picker.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');canvas.width=320;canvas.height=320;const ctx=canvas.getContext('2d');const scale=Math.max(320/img.width,320/img.height);const w=img.width*scale,h=img.height*scale;ctx.drawImage(img,(320-w)/2,(320-h)/2,w,h);account.portrait=canvas.toDataURL('image/jpeg',0.8);saveAll();render()};img.src=reader.result};reader.readAsDataURL(file)};picker.click()};
   actions.append(upload);
-  if(index>1){const remove=document.createElement('button');remove.className='btn danger';remove.textContent='Remove';remove.onclick=()=>removeAccount(account.id);actions.append(remove)}
+  const remove=document.createElement('button');remove.className='btn danger';remove.textContent='Remove';remove.onclick=()=>removeAccount(account.id);actions.append(remove)
   section.append(actions);host.append(section);
  });
  document.getElementById('overallcount').textContent=completed+' of '+total+' completed';
