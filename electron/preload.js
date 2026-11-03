@@ -5,5 +5,6 @@ contextBridge.exposeInMainWorld("tuskfizzy", {
     ipcRenderer.invoke("hoyo:daily-note", { profileId, uid, server }),
   getEnkaProfile: (uid) => ipcRenderer.invoke("enka:profile", uid),
   getBattleChronicle: (profileId, uid, server) => ipcRenderer.invoke("hoyo:battle-chronicle", { profileId, uid, server }),
-  openHoYoLabCheckin: (profileId) => ipcRenderer.invoke("hoyo:checkin", profileId)
+  openHoYoLabCheckin: (profileId) => ipcRenderer.invoke("hoyo:checkin", profileId),
+  importWishHistory: (url) => ipcRenderer.invoke("wish:import", url)
 });
