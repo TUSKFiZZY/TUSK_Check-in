@@ -203,51 +203,6 @@ async function refreshGenshinAccount(accountItem,statusEl){
   const switcher=document.createElement('button');switcher.className='btn';switcher.textContent='Switch Genshin Account';switcher.onclick=()=>showGenshinView('accounts');actions.append(switcher);
   manageButton();
  }
- document.getElementById('moreMenuButton').setAttribute('aria-expanded','false');
- const panel=document.getElementById('genshinPanel'),body=document.getElementById('genshinPanelBody'),title=document.getElementById('genshinTitle');
- const home=view==='home';
- document.body.classList.toggle('genshin-active',!home);
- panel.hidden=home;
- if(home)return;
- body.replaceChildren();
- const account=selectedGenshin();
- const addText=(tag,cls,txt,parent=body)=>{const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=txt;parent.append(el);return el};
- const manageButton=()=>{const button=document.createElement('button');button.className='btn';button.type='button';button.textContent='Manage Genshin Account';button.onclick=()=>showGenshinView('accounts');body.append(button)};
- if(view==='accounts'){
-  title.textContent='Manage Genshin Accounts';
-  addText('p','','Manage your Genshin accounts here. They are separate from daily tracker profiles.');
-  const add=document.createElement('button');add.className='btn primary';add.textContent='＋ Add Genshin account';
-  add.onclick=()=>{const name=prompt('Enter a name for this Genshin account:');if(!name||!name.trim())return;const uid=prompt('Enter the Genshin UID (optional):')||'';const id='genshin_'+Date.now().toString(36);genshinAccounts.push({id,name:name.trim(),uid:uid.trim(),server:'os_asia'});selectedGenshinId=id;saveGenshinAccounts();showGenshinView('accounts')};
-  body.append(add);
-  if(!genshinAccounts.length)addText('div','genshin-note','No Genshin accounts added yet. Add one to get started.');
-  genshinAccounts.forEach(accountItem=>{
-   const row=addText('div','genshin-account-row',''),info=addText('div','','',row);
-   addText('strong','',accountItem.name,info);
-   addText('small','',(accountItem.uid?'UID '+accountItem.uid+' · ':'')+(accountItem.server||'Asia'),info);
-   const controls=addText('div','genshin-actions','',row);
-   const choose=document.createElement('button');choose.className='btn';choose.textContent=accountItem.id===selectedGenshinId?'Selected':'Switch';
-   choose.onclick=()=>{selectedGenshinId=accountItem.id;saveGenshinAccounts();showGenshinView('accounts')};controls.append(choose);
-   const edit=document.createElement('button');edit.className='btn';edit.textContent='Edit';
-   edit.onclick=()=>{const name=prompt('Account name:',accountItem.name);if(name&&name.trim())accountItem.name=name.trim();const uid=prompt('Genshin UID:',accountItem.uid||'');if(uid!==null)accountItem.uid=uid.trim();const server=prompt('Server: os_asia, os_usa, os_euro, or os_cht',accountItem.server||'os_asia');if(server)accountItem.server=server;saveGenshinAccounts();showGenshinView('accounts')};controls.append(edit);
-   const remove=document.createElement('button');remove.className='btn danger';remove.textContent='Remove';
-   remove.onclick=()=>{if(confirm('Remove '+accountItem.name+' from Genshin accounts?')){genshinAccounts=genshinAccounts.filter(x=>x.id!==accountItem.id);if(selectedGenshinId===accountItem.id)selectedGenshinId=genshinAccounts[0]?.id||'';saveGenshinAccounts();showGenshinView('accounts')}};controls.append(remove);
-  });
-  return;
- }
- title.textContent=view==='achievements'?'Achievements':view==='wishes'?'Wish History & Pity':'Genshin Profile';
- if(!account){addText('div','genshin-note','Add a Genshin account first to view this section.');manageButton();return}
- if(view==='profile'){
-  addText('p','','Selected Genshin account: '+account.name);
-  addText('div','genshin-note','UID: '+(account.uid||'Not added')+'\nServer: '+(account.server||'Asia')+'\n\nLive profile details are not connected yet.');
- }else if(view==='achievements'){
-  addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nAchievement data is not connected yet.');
- }else if(view==='wishes'){
-  addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nWish History\nWish history is not connected yet. UIGF import support can be added separately.\n\nPity\nPity counts and guarantee status will appear here after wish history is imported.');
- }
- const actions=addText('div','genshin-actions','');
- const switcher=document.createElement('button');switcher.className='btn';switcher.textContent='Switch Genshin Account';switcher.onclick=()=>showGenshinView('accounts');actions.append(switcher);
- manageButton();
-}
 document.getElementById('moreMenuButton').addEventListener('click',()=>{const menu=document.getElementById('moreMenu');menu.hidden=!menu.hidden;document.getElementById('moreMenuButton').setAttribute('aria-expanded',String(!menu.hidden))});
 document.querySelectorAll('[data-gview]').forEach(button=>button.addEventListener('click',()=>showGenshinView(button.dataset.gview)));
 document.getElementById('closeGenshinPanel').onclick=()=>showGenshinView('home');
