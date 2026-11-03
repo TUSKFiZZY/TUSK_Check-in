@@ -104,6 +104,9 @@ function render(){
   const actions=document.createElement('div');actions.className='account-actions';
   const edit=document.createElement('button');edit.className='btn';edit.textContent='Edit profile';edit.onclick=()=>editAccount(account.id);
   actions.append(edit);
+  const upload=document.createElement('button');upload.className='btn';upload.textContent='Upload picture';
+  upload.onclick=()=>{const picker=document.createElement('input');picker.type='file';picker.accept='image/*';picker.onchange=()=>{const file=picker.files&&picker.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');canvas.width=320;canvas.height=320;const ctx=canvas.getContext('2d');const scale=Math.max(320/img.width,320/img.height);const w=img.width*scale,h=img.height*scale;ctx.drawImage(img,(320-w)/2,(320-h)/2,w,h);account.portrait=canvas.toDataURL('image/jpeg',0.8);saveAll();render()};img.src=reader.result};reader.readAsDataURL(file)};picker.click()};
+  actions.append(upload);
   if(index>1){const remove=document.createElement('button');remove.className='btn danger';remove.textContent='Remove';remove.onclick=()=>removeAccount(account.id);actions.append(remove)}
   section.append(actions);host.append(section);
  });
