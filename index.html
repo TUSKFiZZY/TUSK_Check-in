@@ -151,7 +151,7 @@ async function refreshGenshinAccount(accountItem,statusEl){
      e.preventDefault();
      const cleanName=name.value.trim(),cleanUid=uid.value.trim();
      if(!cleanName)return;
-     if(cleanUid&&!/^\\d{8,10}$/.test(cleanUid)){uid.setCustomValidity('Enter a valid Genshin UID.');uid.reportValidity();return}
+     if(cleanUid&&!/^\d{8,10}$/.test(cleanUid)){uid.setCustomValidity('Enter a valid Genshin UID.');uid.reportValidity();return}
      uid.setCustomValidity('');
      if(existing){existing.name=cleanName;existing.uid=cleanUid;existing.server=server.value}
      else{
@@ -185,7 +185,7 @@ async function refreshGenshinAccount(accountItem,statusEl){
   if(!account){addText('div','genshin-note','Add a Genshin account first to view this section.');manageButton();return}
   if(view==='profile'){
    addText('p','','Selected Genshin account: '+account.name);
-   addText('div','genshin-note','UID: '+(account.uid||'Not added')+'\\nServer: '+(account.server||'Asia')+'\\n\\n'+(account.dailyNote?'Live HoYoLAB data · updated '+new Date(account.dailyNote.fetchedAt).toLocaleString():'Not connected yet. Open HoYoLAB and sign in to connect.'));
+   addText('div','genshin-note','UID: '+(account.uid||'Not added')+'\nServer: '+(account.server||'Asia')+'\n\n'+(account.dailyNote?'Live HoYoLAB data · updated '+new Date(account.dailyNote.fetchedAt).toLocaleString():'Not connected yet. Open HoYoLAB and sign in to connect.'));
    if(account.dailyNote){
     const stats=addText('div','hoyo-data','');
     [[account.dailyNote.resin+'/'+account.dailyNote.maxResin,'Resin'],[account.dailyNote.commissions+'/'+account.dailyNote.totalCommissions,'Commissions'],[account.dailyNote.expeditions+'/'+account.dailyNote.maxExpeditions,'Expeditions'],[account.dailyNote.extraRewardClaimed?'Claimed':'Not claimed','Commission bonus']].forEach(([value,label])=>{const item=addText('div','hoyo-stat','',stats);addText('strong','',value,item);addText('span','',label,item)});
@@ -195,9 +195,9 @@ async function refreshGenshinAccount(accountItem,statusEl){
    const connect=document.createElement('button');connect.className='btn';connect.textContent='Connect HoYoLAB';connect.onclick=()=>openGenshinLogin(account,status);actions.append(connect);
    const refresh=document.createElement('button');refresh.className='btn primary';refresh.textContent='Refresh Genshin data';refresh.disabled=!account.uid;refresh.onclick=()=>refreshGenshinAccount(account,status);actions.append(refresh);
   }else if(view==='achievements'){
-   addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\\n\\nAchievement data is not connected yet.');
+   addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nAchievement data is not connected yet.');
   }else if(view==='wishes'){
-   addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\\n\\nWish History\\nWish history is not connected yet. UIGF import support can be added separately.\\n\\nPity\\nPity counts and guarantee status will appear here after wish history is imported.');
+   addText('div','genshin-note','Selected account: '+account.name+(account.uid?' · UID '+account.uid:'')+'\n\nWish History\nWish history is not connected yet. UIGF import support can be added separately.\n\nPity\nPity counts and guarantee status will appear here after wish history is imported.');
   }
   const actions=addText('div','genshin-actions','');
   const switcher=document.createElement('button');switcher.className='btn';switcher.textContent='Switch Genshin Account';switcher.onclick=()=>showGenshinView('accounts');actions.append(switcher);
