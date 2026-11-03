@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, ipcMain, session } = require("electron");
+const { app, BrowserWindow, shell, ipcMain, session, net } = require("electron");
 const path = require("path");
 const crypto = require("crypto");
 
@@ -54,9 +54,20 @@ ipcMain.handle("enka:profile",async(event,uid)=>{
  if(!isTracker(event))throw new Error("Untrusted tracker page.");
  if(!/^\d{9}$/.test(String(uid||"")))throw new Error("Enter a valid 9-digit Genshin UID.");
  const cached=ENKA_CACHE.get(uid);if(cached&&cached.expiresAt>Date.now())return {...cached.data,cached:true};
- const response=await fetch("https://enka.network/api/uid/"+encodeURIComponent(uid)+"/",{headers:{"User-Agent":"TUSKFiZZY/1.0 (Genshin profile viewer)","Accept":"application/json"}});
+ let response;
+ try {
+  response=await net.fetch("https://enka.network/api/uid/"+encodeURIComponent(uid)+"/",{
+   method:"GET",headers:{"Accept":"application/json","User-Agent":"Mozilla/5.0 TUSKFiZZY Genshin Profile Viewer"},
+   signal:AbortSignal.timeout(20000)
+  });
+ } catch(error) {
+  const reason=error&&error.cause&&error.cause.message?error.cause.message:(error&&error.message?error.message:"network connection failed");
+  throw new Error("Could not connect to Enka.Network. Check your internet connection, VPN/DNS, or try again later. Details: "+reason);
+ }
  if(!response.ok){if(response.status===404)throw new Error("Enka.Network could not find this UID. Check the UID and server.");if(response.status===429)throw new Error("Enka.Network rate limit reached. Wait before refreshing.");if(response.status===424)throw new Error("Enka.Network is temporarily unavailable during a game update.");throw new Error("Enka.Network request failed ("+response.status+").")}
- const raw=await response.json();if(!raw||!raw.playerInfo)throw new Error("Enka.Network returned incomplete profile data.");
+ let raw;
+ try{raw=await response.json()}catch(error){throw new Error("Enka.Network returned an unreadable response. Try again later.")}
+ if(!raw||!raw.playerInfo)throw new Error("Enka.Network returned incomplete profile data. Make sure your in-game character showcase is public.");
  const ttl=Math.max(60,Math.min(Number(raw.ttl)||300,86400));
  const data={uid:String(uid),playerInfo:raw.playerInfo,avatarInfoList:Array.isArray(raw.avatarInfoList)?raw.avatarInfoList:[],ttl,fetchedAt:Date.now(),cached:false};
  ENKA_CACHE.set(uid,{data,expiresAt:Date.now()+ttl*1000});return data;
