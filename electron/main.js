@@ -145,7 +145,7 @@ ipcMain.handle("wish:import", async (event, rawUrl) => {
  if (!isTracker(event)) throw new Error("Untrusted tracker page.");
  let supplied;
  try { supplied = new URL(String(rawUrl || "")); } catch { throw new Error("Paste a valid wish-history URL."); }
- if (supplied.protocol !== "https:" || !/(^|\\.)hoyoverse\\.com$|(^|\\.)mihoyo\\.com$/i.test(supplied.hostname) || !/gacha/i.test(supplied.pathname)) {
+ if (supplied.protocol !== "https:" || !/(^|\.)hoyoverse\.com$|(^|\.)mihoyo\.com$/i.test(supplied.hostname) || !/gacha/i.test(supplied.pathname)) {
   throw new Error("This does not look like a supported HoYoverse Genshin wish-history URL.");
  }
  const region = supplied.searchParams.get("region") || "";
