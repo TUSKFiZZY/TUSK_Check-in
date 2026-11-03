@@ -52,7 +52,7 @@ function makeDS() {
 }
 ipcMain.handle("enka:profile",async(event,uid)=>{
  if(!isTracker(event))throw new Error("Untrusted tracker page.");
- if(!/^\\d{9}$/.test(String(uid||"")))throw new Error("Enter a valid 9-digit Genshin UID.");
+ if(!/^\d{9}$/.test(String(uid||"")))throw new Error("Enter a valid 9-digit Genshin UID.");
  const cached=ENKA_CACHE.get(uid);if(cached&&cached.expiresAt>Date.now())return {...cached.data,cached:true};
  const response=await fetch("https://enka.network/api/uid/"+encodeURIComponent(uid)+"/",{headers:{"User-Agent":"TUSKFiZZY/1.0 (Genshin profile viewer)","Accept":"application/json"}});
  if(!response.ok){if(response.status===404)throw new Error("Enka.Network could not find this UID. Check the UID and server.");if(response.status===429)throw new Error("Enka.Network rate limit reached. Wait before refreshing.");if(response.status===424)throw new Error("Enka.Network is temporarily unavailable during a game update.");throw new Error("Enka.Network request failed ("+response.status+").")}
@@ -64,7 +64,7 @@ ipcMain.handle("enka:profile",async(event,uid)=>{
 ipcMain.handle("hoyo:battle-chronicle",async(event,args)=>{
  if(!isTracker(event))throw new Error("Untrusted tracker page.");
  const {profileId,uid,server}=args||{},partition=partitionFor(profileId);
- if(!/^\\d{8,10}$/.test(String(uid||"")))throw new Error("Enter a valid Genshin UID.");
+ if(!/^\d{8,10}$/.test(String(uid||"")))throw new Error("Enter a valid Genshin UID.");
  if(!["os_asia","os_usa","os_euro","os_cht"].includes(server))throw new Error("Select a valid Genshin server.");
  const url=new URL("https://bbs-api-os.hoyolab.com/game_record/genshin/api/index");
  url.searchParams.set("server",server);url.searchParams.set("role_id",String(uid));
