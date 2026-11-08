@@ -452,6 +452,12 @@ function exportLegacyData(){
  try{
   const cleanAccounts=accounts.map(a=>({id:String(a.id),name:String(a.name||'').slice(0,80),portrait:typeof a.portrait==='string'?a.portrait:'',genshinId:typeof a.genshinId==='string'?a.genshinId:null,createdAt:typeof a.createdAt==='string'?a.createdAt:''}));
   const cleanGenshin=genshinAccounts.map(g=>({id:String(g.id),name:String(g.name||'').slice(0,80),uid:String(g.uid||''),server:String(g.server||''),createdAt:typeof g.createdAt==='string'?g.createdAt:''}));
+  // The old Home also shows Genshin accounts as checklist profiles. Include those profile IDs so their daily ticks migrate too.
+  cleanGenshin.forEach(g=>{
+   const linked=accounts.find(a=>String(a.id)===g.id||(String(a.uid||'').trim()&&String(a.uid).trim()===g.uid));
+   if(linked){const target=cleanAccounts.find(a=>a.id===String(linked.id));if(target)target.genshinId=g.id}
+   else cleanAccounts.push({id:g.id,name:g.name,portrait:'',genshinId:g.id,createdAt:g.createdAt});
+  });
   const cleanDaily={};
   Object.entries(records).forEach(([day,profiles])=>{
    if(!/^20\d{2}-\d{2}-\d{2}$/.test(day)||!profiles||typeof profiles!=='object'||Array.isArray(profiles))return;
