@@ -459,12 +459,19 @@ function exportLegacyData(){
    else cleanAccounts.push({id:g.id,name:g.name,portrait:'',genshinId:g.id,createdAt:g.createdAt});
   });
   const cleanDaily={};
+  const knownProfileIds=new Set(cleanAccounts.map(account=>account.id));
   Object.entries(records).forEach(([day,profiles])=>{
    if(!/^20\d{2}-\d{2}-\d{2}$/.test(day)||!profiles||typeof profiles!=='object'||Array.isArray(profiles))return;
    const clean={};
    Object.entries(profiles).forEach(([id,flags])=>{
-    if(id==='_resinLast'&&flags&&typeof flags==='object'&&!Array.isArray(flags)){clean._resinLast=flags;return}
-    if(Array.isArray(flags)&&flags.length===3&&flags.every(value=>typeof value==='boolean'))clean[id]=flags;
+    if(id==='_resinLast'&&flags&&typeof flags==='object'&&!Array.isArray(flags)){
+     const last={};
+     Object.entries(flags).forEach(([profileId,value])=>{
+      if(knownProfileIds.has(profileId)&&typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=300)last[profileId]=value;
+     });
+     clean._resinLast=last;return;
+    }
+    if(knownProfileIds.has(id)&&Array.isArray(flags)&&flags.length===3&&flags.every(value=>typeof value==='boolean'))clean[id]=flags;
    });
    cleanDaily[day]=clean;
   });
