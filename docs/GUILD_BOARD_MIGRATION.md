@@ -15,11 +15,13 @@ Use Guild Board as the technical foundation while retaining TUSKFiZZY's identity
 
 Upstream source: https://github.com/QL1STY/guild-board
 
+The Guild Board author explicitly granted permission to reuse the repository under its MIT terms, with the condition that its LICENSE file (or an equivalent attribution) is retained. A copy is included as `LICENSE-GUILD-BOARD`. Attribute reused work as “Based on Guild Board by QL1STY.” HoYoverse game art is not covered by that permission and must not be copied from Guild Board; use only assets with separate permission or appropriate rights.
+
 ## Non-negotiable safety rules
 
 1. Keep this migration on `migration/guild-board-foundation`; do not push migration work to `main` during development.
 2. Do not change GitHub Pages or publish a release until the migrated desktop app passes the acceptance checks below.
-3. Never commit cookies, HoYoLAB tokens, wish-history URLs containing credentials, local databases, personal account exports, or logs containing secrets.
+3. Never commit cookies, HoYoLAB tokens, wish-history URLs containing credentials, local databases, personal account exports, or logs containing secrets. Keep local secrets in ignored files or the upstream DPAPI-backed secret store; verify `.gitignore` and scan the staged tree before every commit.
 4. Do not copy Electron session cookies between app origins or profiles. If secure session migration cannot be demonstrated, preserve account records and ask the user to sign in again.
 5. Preserve a recoverable backup before converting any localStorage/browser data to SQLite. Import must be repeatable and must not delete the source data.
 6. Keep each HoYoLAB account's authentication state isolated. Account profiles and display names must survive re-login.
@@ -91,6 +93,10 @@ Upstream source: https://github.com/QL1STY/guild-board
 - [ ] Data import is repeatable, backed up, and leaves original data recoverable.
 - [ ] Windows installer builds and launches on a clean Windows 11 environment.
 - [ ] Upstream license and third-party notices are included.
+
+## Permission and asset boundary
+
+The Guild Board author has explicitly authorized reuse of the MIT-licensed repository and requested retention of its LICENSE file or attribution. This does not grant rights to HoYoverse game art. Do not copy game artwork into the migrated app unless it is separately licensed or permission is obtained.
 
 ## Current implementation constraint
 
