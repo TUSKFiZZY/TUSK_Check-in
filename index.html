@@ -454,7 +454,7 @@ function exportLegacyData(){
   const cleanGenshin=genshinAccounts.map(g=>({id:String(g.id),name:String(g.name||'').slice(0,80),uid:String(g.uid||''),server:String(g.server||''),createdAt:typeof g.createdAt==='string'?g.createdAt:''}));
   const cleanDaily={};
   Object.entries(records).forEach(([day,profiles])=>{
-   if(!/^20\\d{2}-\\d{2}-\\d{2}$/.test(day)||!profiles||typeof profiles!=='object'||Array.isArray(profiles))return;
+   if(!/^20\d{2}-\d{2}-\d{2}$/.test(day)||!profiles||typeof profiles!=='object'||Array.isArray(profiles))return;
    const clean={};
    Object.entries(profiles).forEach(([id,flags])=>{
     if(id==='_resinLast'&&flags&&typeof flags==='object'&&!Array.isArray(flags)){clean._resinLast=flags;return}
