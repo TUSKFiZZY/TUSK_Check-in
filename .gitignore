@@ -1,0 +1,25 @@
+# Local credentials and private account data
+.env
+.env.*
+!.env.example
+*.cookie
+*.cookies
+*token*
+*secret*
+*.sqlite
+*.sqlite3
+*.db
+*.log
+private-data/
+user-data/
+local-data/
+backups/
+
+# Local development and build output
+node_modules/
+dist/
+release/
+out/
+coverage/
+.DS_Store
+Thumbs.db
