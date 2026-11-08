@@ -103,7 +103,7 @@ header{text-align:center;padding:10px 0 20px}body.genshin-active .date,body.gens
 </dialog>
 
 <button class="btn install" id="install">Install app</button>
-<div class="footer"><span id="saved">Saved on this device</span><img class="footer-brand-icon" src="./icon-192.png" alt="TUSKFiZZY icon" loading="lazy"><button class="btn danger" id="reset">Reset this day ↺</button></div>
+<div class="footer"><span id="saved">Saved on this device</span><img class="footer-brand-icon" src="./icon-192.png" alt="TUSKFiZZY icon" loading="lazy"><button class="btn" id="exportLegacy" type="button">Export data</button><button class="btn danger" id="reset">Reset this day ↺</button></div>
 </main>
 <script>
 (()=>{
@@ -447,6 +447,29 @@ Object.values(records).forEach(day=>{if(day&&typeof day==='object')oldDefaultIds
 if(hadOldDefaults){try{localStorage.setItem(accountsKey,JSON.stringify(accounts));localStorage.setItem(recordsKey,JSON.stringify(records));localStorage.removeItem(legacyKey)}catch(e){}}
 
 function saveAll(){try{localStorage.setItem(accountsKey,JSON.stringify(accounts));localStorage.setItem(recordsKey,JSON.stringify(records));document.getElementById('saved').textContent='✓ Saved on this device'}catch(e){document.getElementById('saved').textContent='Could not save — storage unavailable'}}
+
+function exportLegacyData(){
+ try{
+  const cleanAccounts=accounts.map(a=>({id:String(a.id),name:String(a.name||'').slice(0,80),portrait:typeof a.portrait==='string'?a.portrait:'',genshinId:typeof a.genshinId==='string'?a.genshinId:null,createdAt:typeof a.createdAt==='string'?a.createdAt:''}));
+  const cleanGenshin=genshinAccounts.map(g=>({id:String(g.id),name:String(g.name||'').slice(0,80),uid:String(g.uid||''),server:String(g.server||''),createdAt:typeof g.createdAt==='string'?g.createdAt:''}));
+  const cleanDaily={};
+  Object.entries(records).forEach(([day,profiles])=>{
+   if(!/^20\\d{2}-\\d{2}-\\d{2}$/.test(day)||!profiles||typeof profiles!=='object'||Array.isArray(profiles))return;
+   const clean={};
+   Object.entries(profiles).forEach(([id,flags])=>{
+    if(id==='_resinLast'&&flags&&typeof flags==='object'&&!Array.isArray(flags)){clean._resinLast=flags;return}
+    if(Array.isArray(flags)&&flags.length===3&&flags.every(value=>typeof value==='boolean'))clean[id]=flags;
+   });
+   cleanDaily[day]=clean;
+  });
+  const payload={format:'tuskfizzy-local-data',version:1,exportedAt:new Date().toISOString(),accounts:cleanAccounts,dailyRecords:cleanDaily,genshinAccounts:cleanGenshin,selectedGenshinId:genshinAccounts.some(g=>g.id===selectedGenshinId)?selectedGenshinId:''};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download='tuskfizzy-local-data.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  document.getElementById('saved').textContent='✓ Exported profiles and checklist history';
+ }catch(error){document.getElementById('saved').textContent='Export failed — '+(error&&error.message?error.message:'storage unavailable')}
+}
+
 function homeAccounts(){const combined=accounts.map(a=>({...a}));const sameUid=(a,b)=>String(a.uid||'').trim()&&String(b.uid||'').trim()&&String(a.uid).trim()===String(b.uid).trim();genshinAccounts.forEach(g=>{const existing=combined.find(a=>a.id===g.id||sameUid(a,g));if(existing){existing.isGenshin=true;existing.genshinId=g.id;existing.uid=existing.uid||g.uid||'';existing.server=existing.server||g.server||'os_asia';existing.dailyNote=g.dailyNote||existing.hoyoData||null;existing.lastConnected=g.lastConnected||existing.hoyoUpdated||null}else combined.push({id:g.id,name:g.name,portrait:'',uid:g.uid||'',server:g.server||'os_asia',isGenshin:true,dailyNote:g.dailyNote||null,lastConnected:g.lastConnected||null,genshinId:g.id})});return combined}
 const fresh=()=>Object.fromEntries(homeAccounts().map(a=>[a.id,[false,false,false]]));
 function current(){let r=records[key(selected)];if(!r){r=fresh();}homeAccounts().forEach(a=>{if(!Array.isArray(r[a.id]))r[a.id]=[false,false,false]});return r}
@@ -590,6 +613,7 @@ document.getElementById('prev').onclick=()=>{selected.setDate(selected.getDate()
 document.getElementById('next').onclick=()=>{if(key(selected)<key(today())){selected.setDate(selected.getDate()+1);render()}};
 document.getElementById('today').onclick=()=>{selected=today();monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);showMonth=false;render()};
 document.getElementById('monthToggle').onclick=()=>{showMonth=!showMonth;monthCursor=new Date(selected.getFullYear(),selected.getMonth(),1,12);render()};
+document.getElementById('exportLegacy').onclick=exportLegacyData;
 document.getElementById('reset').onclick=()=>{if(confirm('Reset all account checkboxes for '+key(selected)+'?')){delete records[key(selected)];saveAll();render()}};
 updateClock();
 setInterval(updateClock,1000);
